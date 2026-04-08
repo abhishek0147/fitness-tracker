@@ -1,0 +1,53 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid || root.child('users').child($uid).child('public').val() === true",
+        ".write": "$uid === auth.uid",
+        ".validate": "newData.hasChildren(['id', 'name', 'email'])"
+      }
+    },
+    "activities": {
+      "$uid": {
+        ".read": "$uid === auth.uid || root.child('follows').child(auth.uid).child($uid).exists()",
+        ".write": "$uid === auth.uid",
+        "$activityId": {
+          ".validate": "newData.hasChildren(['id', 'name', 'type'])"
+        }
+      }
+    },
+    "routes": {
+      "$uid": {
+        ".read": "$uid === auth.uid || root.child('follows').child(auth.uid).child($uid).exists()",
+        ".write": "$uid === auth.uid",
+        "$activityId": {
+          ".validate": "newData.hasChildren(['activity_id', 'points'])"
+        }
+      }
+    },
+    "follows": {
+      "$uid": {
+        ".read": true,
+        ".write": "$uid === auth.uid",
+        "$followingId": {
+          ".validate": "newData.isBoolean()"
+        }
+      }
+    },
+    "kudos": {
+      "$activityId": {
+        ".read": true,
+        ".write": "auth.uid !== null",
+        "$uid": {
+          ".validate": "newData.isNumber()"
+        }
+      }
+    },
+    "stats": {
+      "$uid": {
+        ".read": true,
+        ".write": "$uid === auth.uid"
+      }
+    }
+  }
+}

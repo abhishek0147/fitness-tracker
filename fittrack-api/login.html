@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitTrack - Login</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #16213e 50%, #1a1a2e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #e0e0e0;
+        }
+
+        .stars-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            opacity: 0.5;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(25, 35, 60, 0.95) 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 60px rgba(102, 255, 200, 0.15), inset 0 0 30px rgba(102, 255, 200, 0.05);
+            border: 2px solid rgba(102, 255, 200, 0.2);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .branding {
+            background: linear-gradient(135deg, rgba(102, 255, 192, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-right: 2px solid rgba(102, 255, 200, 0.2);
+            animation: slideInLeft 0.8s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .brand-text {
+            text-align: center;
+        }
+
+        .brand-text h1 {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #66ffc0 0%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 10px rgba(102, 255, 192, 0.5);
+            }
+            50% {
+                text-shadow: 0 0 20px rgba(102, 255, 192, 0.8), 0 0 30px rgba(102, 255, 192, 0.5);
+            }
+        }
+
+        .brand-text p {
+            color: #66ffc0;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .features {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInLeft 0.8s ease-out backwards;
+        }
+
+        .feature:nth-child(1) { animation-delay: 0.2s; }
+        .feature:nth-child(2) { animation-delay: 0.4s; }
+        .feature:nth-child(3) { animation-delay: 0.6s; }
+
+        .feature-icon {
+            font-size: 24px;
+        }
+
+        .feature-text {
+            font-size: 14px;
+            color: #b0e0d0;
+        }
+
+        .form-container {
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            animation: slideInRight 0.8s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .form-container h2 {
+            color: #66ffc0;
+            font-size: 28px;
+            margin-bottom: 30px;
+            text-align: center;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        .toggle-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: rgba(102, 255, 192, 0.1);
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(102, 255, 192, 0.2);
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: #66ffc0;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #66ffc0 0%, #00ff88 100%);
+            color: #0a0e27;
+            box-shadow: 0 0 15px rgba(102, 255, 192, 0.4);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            animation: slideUp 0.6s ease-out backwards;
+        }
+
+        .form-group:nth-child(n+2) {
+            animation-delay: 0.1s;
+        }
+        .form-group:nth-child(n+3) {
+            animation-delay: 0.2s;
+        }
+        .form-group:nth-child(n+4) {
+            animation-delay: 0.3s;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #66ffc0;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid rgba(102, 255, 192, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input::placeholder {
+            color: rgba(102, 255, 192, 0.4);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #66ffc0;
+            background: rgba(102, 255, 192, 0.1);
+            box-shadow: 0 0 20px rgba(102, 255, 192, 0.4), inset 0 0 10px rgba(102, 255, 192, 0.1);
+        }
+
+        .form-group.hidden {
+            display: none;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #66ffc0 0%, #00ff88 100%);
+            color: #0a0e27;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(102, 255, 192, 0.3);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out 0.4s backwards;
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-login:hover::before {
+            left: 100%;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 30px rgba(102, 255, 192, 0.6), 0 0 40px rgba(102, 255, 192, 0.4);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 14px;
+            background: rgba(102, 255, 192, 0.1);
+            color: #66ffc0;
+            border: 2px solid #66ffc0;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(102, 255, 192, 0.2);
+            animation: slideUp 0.6s ease-out 0.5s backwards;
+        }
+
+        .google-btn:hover {
+            background: rgba(102, 255, 192, 0.2);
+            box-shadow: 0 0 25px rgba(102, 255, 192, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .status-message {
+            text-align: center;
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .status-message.success {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            display: block;
+        }
+
+        .status-message.error {
+            background: rgba(255, 100, 100, 0.1);
+            color: #ff6464;
+            border: 1px solid rgba(255, 100, 100, 0.3);
+            display: block;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background: #66ffc0;
+            border-radius: 50%;
+            margin-left: 5px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .branding {
+                border-right: none;
+                border-bottom: 2px solid rgba(102, 255, 200, 0.2);
+                padding: 40px 30px;
+            }
+
+            .form-container {
+                padding: 40px 30px;
+            }
+
+            .brand-text h1 {
+                font-size: 28px;
+            }
+
+            .features {
+                margin-top: 20px;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars-bg" id="starsBg"></div>
+
+    <div class="container">
+        <div class="branding">
+            <div class="logo">🏃</div>
+            <div class="brand-text">
+                <h1>FitTrack</h1>
+                <p>Your personal fitness companion</p>
+            </div>
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">📍</div>
+                    <div class="feature-text">Live GPS Tracking</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-text">Activity Analytics</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">👥</div>
+                    <div class="feature-text">Social Community</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <h2 id="formTitle">Login</h2>
+
+            <div class="toggle-form">
+                <button class="toggle-btn active" onclick="toggleForm('login')">Login</button>
+                <button class="toggle-btn" onclick="toggleForm('signup')">Sign Up</button>
+            </div>
+
+            <form id="authForm">
+                <!-- Login Form -->
+                <div class="form-group" id="emailGroup">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="your@email.com" required />
+                </div>
+
+                <div class="form-group" id="passwordGroup">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required />
+                </div>
+
+                <!-- Signup Only Fields -->
+                <div class="form-group hidden" id="nameGroup">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" placeholder="John Doe" />
+                </div>
+
+                <div class="form-group hidden" id="phoneGroup">
+                    <label for="phone">Phone (Optional)</label>
+                    <input type="tel" id="phone" placeholder="+1 (555) 000-0000" />
+                </div>
+
+                <button type="submit" class="btn-login" id="submitBtn">Login</button>
+            </form>
+
+            <button class="google-btn" onclick="loginWithGoogle()">
+                🔐 Continue with Google
+            </button>
+
+            <div class="status-message" id="statusMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        // Generate stars
+        function generateStars() {
+            const bg = document.getElementById('starsBg');
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                bg.appendChild(star);
+            }
+        }
+        generateStars();
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTYbG7LkZOHOLsRiQTKvJvpn0arqJ6fsY",
+            authDomain: "fitness-tracking-d01f6.firebaseapp.com",
+            projectId: "fitness-tracking-d01f6",
+            storageBucket: "fitness-tracking-d01f6.firebasestorage.app",
+            messagingSenderId: "300448448622",
+            appId: "1:300448448622:web:2ba258bed6d86ad145a67f"
+        };
+
+        // Initialize Firebase
+        let auth, db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.database();
+        } catch (error) {
+            console.log('Firebase not fully configured yet. Using local mode.');
+        }
+
+        let isLoginMode = true;
+
+        function toggleForm(mode) {
+            isLoginMode = mode === 'login';
+            const buttons = document.querySelectorAll('.toggle-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const nameGroup = document.getElementById('nameGroup');
+            const phoneGroup = document.getElementById('phoneGroup');
+            const formTitle = document.getElementById('formTitle');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (isLoginMode) {
+                nameGroup.classList.add('hidden');
+                phoneGroup.classList.add('hidden');
+                formTitle.textContent = 'Login';
+                submitBtn.textContent = 'Login';
+            } else {
+                nameGroup.classList.remove('hidden');
+                phoneGroup.classList.remove('hidden');
+                formTitle.textContent = 'Create Account';
+                submitBtn.textContent = 'Sign Up';
+            }
+
+            document.getElementById('statusMessage').classList.remove('success', 'error');
+            document.getElementById('statusMessage').style.display = 'none';
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const statusMsg = document.getElementById('statusMessage');
+            const submitBtn = document.getElementById('submitBtn');
+
+            statusMsg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent += ' <span class="loading"></span>';
+
+            try {
+                let response;
+                if (isLoginMode) {
+                    // Login via FitTrack API
+                    response = await fetch('http://localhost:3000/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                } else {
+                    // Signup via FitTrack API
+                    const name = document.getElementById('name').value;
+                    response = await fetch('http://localhost:3000/api/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, password })
+                    });
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Authentication failed');
+                }
+
+                // Save token
+                localStorage.setItem('fittrack_token', data.token);
+                localStorage.setItem('fittrack_user', JSON.stringify({
+                    id: data.user.id,
+                    name: data.user.name,
+                    email: data.user.email
+                }));
+
+                statusMsg.className = 'status-message success';
+                statusMsg.textContent = isLoginMode ? '✅ Login successful! Redirecting...' : '✅ Account created! Redirecting...';
+                statusMsg.style.display = 'block';
+
+                setTimeout(() => {
+                    window.location.href = 'http://localhost:8080/live-tracker-neon.html';
+                }, 2000);
+            } catch (error) {
+                statusMsg.className = 'status-message error';
+                statusMsg.textContent = '❌ ' + error.message;
+                statusMsg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = isLoginMode ? 'Login' : 'Sign Up';
+            }
+        }
+
+        async function loginWithGoogle() {
+            try {
+                if (!auth) {
+                    throw new Error('Firebase not configured. Please add your Firebase credentials.');
+                }
+
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+
+                // Get ID token and exchange for FitTrack token
+                const idToken = await user.getIdToken();
+
+                const response = await fetch('http://localhost:3000/api/auth/google', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        idToken,
+                        email: user.email,
+                        name: user.displayName
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Google authentication failed');
+                }
+
+                localStorage.setItem('fittrack_token', data.token);
+                localStorage.setItem('fittrack_user', JSON.stringify({
+                    id: data.user.id,
+                    name: data.user.name,
+                    email: data.user.email
+                }));
+
+                const statusMsg = document.getElementById('statusMessage');
+                statusMsg.className = 'status-message success';
+                statusMsg.textContent = '✅ Google login successful! Redirecting...';
+                statusMsg.style.display = 'block';
+
+                setTimeout(() => {
+                    window.location.href = 'http://localhost:8080/live-tracker-neon.html';
+                }, 2000);
+            } catch (error) {
+                const statusMsg = document.getElementById('statusMessage');
+                statusMsg.className = 'status-message error';
+                statusMsg.textContent = '❌ ' + error.message;
+                statusMsg.style.display = 'block';
+            }
+        }
+
+        document.getElementById('authForm').addEventListener('submit', handleAuth);
+    </script>
+</body>
+</html>

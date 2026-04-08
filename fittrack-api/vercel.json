@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "express",
+  "functions": {
+    "src/app.js": {
+      "runtime": "nodejs18.x",
+      "memory": 1024
+    }
+  },
+  "env": [
+    "JWT_SECRET",
+    "FIREBASE_PROJECT_ID",
+    "FIREBASE_DATABASE_URL",
+    "FIREBASE_SERVICE_ACCOUNT"
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
+}

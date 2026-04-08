@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitTrack GPS Route Viewer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/2.1.0/gpx.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        h1 {
+            color: #ff7043;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #ff7043;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #e64a19;
+        }
+
+        .stats {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            border-left: 4px solid #ff7043;
+        }
+
+        .stats h3 {
+            color: #ff7043;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #ff7043;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .info-section {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #1565c0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>🏃 FitTrack Route Viewer</h1>
+
+            <div class="info-section">
+                Paste your GeoJSON route data below to visualize it on the map.
+            </div>
+
+            <form id="routeForm">
+                <div class="form-group">
+                    <label for="activityName">Activity Name</label>
+                    <input type="text" id="activityName" value="My Run" />
+                </div>
+
+                <div class="form-group">
+                    <label for="geojsonData">GeoJSON Data</label>
+                    <textarea id="geojsonData" placeholder='Paste GeoJSON here...'></textarea>
+                </div>
+
+                <button type="submit">Load Route on Map</button>
+            </form>
+
+            <div id="stats" class="stats" style="display: none;">
+                <h3>📊 Route Statistics</h3>
+                <div class="stat-row">
+                    <span>Total Points:</span>
+                    <span class="stat-value" id="pointCount">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Distance:</span>
+                    <span class="stat-value" id="distance">0 km</span>
+                </div>
+                <div class="stat-row">
+                    <span>Elevation Gain:</span>
+                    <span class="stat-value" id="elevation">0 m</span>
+                </div>
+                <div class="stat-row">
+                    <span>Max Elevation:</span>
+                    <span class="stat-value" id="maxElevation">0 m</span>
+                </div>
+            </div>
+
+            <div id="message"></div>
+
+            <div class="info-section" style="margin-top: 30px;">
+                <strong>How to use:</strong><br>
+                1. Log an activity on FitTrack API<br>
+                2. Record GPS points<br>
+                3. Get GeoJSON via <code>GET /api/routes/:id/geojson</code><br>
+                4. Paste here to visualize
+            </div>
+        </div>
+
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([40.7128, -74.0060], 13);
+
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Custom markers
+        const startIcon = L.icon({
+            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PHBhdGggZmlsbD0iIzRDQUYyNjAiIGQ9Ik0xMiAwQzUuNDEgMCAwIDUuNDEgMCAxMmM1IDUuODEgMTIgMTIgMTIgMTJzNyA2LjE5IDEyIDEyYzYuNTkgMCAxMiA1LjQxIDEyLTEyUzE4LjU5IDAgMTIgMHptMCAxOGMtMy4zMiAwLTYtMi42OC02LTZzMi42OC02IDYtNiA2IDIuNjggNiA2LTIuNjggNi02IDZ6Ii8+PC9zdmc+',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+        const finishIcon = L.icon({
+            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PHBhdGggZmlsbD0iI0ZGNDQyNjQiIGQ9Ik0xMiAwQzUuNDEgMCAwIDUuNDEgMCAxMmM1IDUuODEgMTIgMTIgMTIgMTJzNyA2LjE5IDEyIDEyYzYuNTkgMCAxMiA1LjQxIDEyLTEyUzE4LjU5IDAgMTIgMHptMCAxOGMtMy4zMiAwLTYtMi42OC02LTZzMi42OC02IDYtNiA2IDIuNjggNiA2LTIuNjggNi02IDZ6Ii8+PC9zdmc+',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+        // Track layers
+        let routeLayer = null;
+
+        document.getElementById('routeForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const geojsonText = document.getElementById('geojsonData').value.trim();
+            const activityName = document.getElementById('activityName').value || 'My Run';
+            const messageDiv = document.getElementById('message');
+
+            messageDiv.innerHTML = '';
+
+            try {
+                const geojsonData = JSON.parse(geojsonText);
+
+                // Clear previous route
+                if (routeLayer) {
+                    map.removeLayer(routeLayer);
+                }
+
+                // Add new route
+                routeLayer = L.geoJSON(geojsonData, {
+                    style: function (feature) {
+                        if (feature.geometry.type === 'LineString') {
+                            return {
+                                color: '#ff7043',
+                                weight: 3,
+                                opacity: 0.8,
+                            };
+                        }
+                    },
+                    pointToLayer: function (feature, latlng) {
+                        const marker = feature.properties.marker;
+                        if (marker === 'start') {
+                            return L.marker(latlng, { icon: startIcon }).bindPopup('🟢 Start');
+                        } else if (marker === 'finish') {
+                            return L.marker(latlng, { icon: finishIcon }).bindPopup('🏁 Finish');
+                        }
+                        return L.circleMarker(latlng, {
+                            radius: 2,
+                            fillColor: '#ff7043',
+                            color: '#fff',
+                            weight: 0.5,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties) {
+                            layer.bindPopup(`<b>${feature.properties.name || 'Point'}</b>`);
+                        }
+                    }
+                }).addTo(map);
+
+                // Fit map to route
+                const bounds = routeLayer.getBounds();
+                map.fitBounds(bounds, { padding: [50, 50] });
+
+                // Calculate and display stats
+                if (geojsonData.features) {
+                    const lineFeature = geojsonData.features.find(f => f.geometry.type === 'LineString');
+                    if (lineFeature && lineFeature.geometry.coordinates) {
+                        const coords = lineFeature.geometry.coordinates;
+                        const elevations = coords.map(c => c[2] || 0);
+                        const maxElev = Math.max(...elevations);
+                        const minElev = Math.min(...elevations);
+                        const elevGain = maxElev - minElev;
+
+                        document.getElementById('pointCount').textContent = coords.length;
+                        document.getElementById('maxElevation').textContent = maxElev.toFixed(0) + ' m';
+                        document.getElementById('elevation').textContent = elevGain.toFixed(0) + ' m';
+                        document.getElementById('stats').style.display = 'block';
+                    }
+                }
+
+                messageDiv.innerHTML = `<div class="success">✅ Route loaded successfully!</div>`;
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="error">❌ Invalid GeoJSON: ${error.message}</div>`;
+            }
+        });
+
+        // Example GeoJSON preset
+        const exampleGeojson = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [
+                            [-74.006, 40.7128, 10],
+                            [-74.005, 40.715, 12],
+                            [-74.004, 40.718, 15],
+                            [-74.003, 40.72, 18],
+                            [-74.001, 40.721, 20],
+                            [-74.002, 40.717, 17],
+                            [-74.004, 40.714, 14],
+                            [-74.0055, 40.712, 11]
+                        ]
+                    },
+                    "properties": { "points": 8 }
+                },
+                {
+                    "type": "Feature",
+                    "geometry": { "type": "Point", "coordinates": [-74.006, 40.7128] },
+                    "properties": { "name": "Start", "marker": "start" }
+                },
+                {
+                    "type": "Feature",
+                    "geometry": { "type": "Point", "coordinates": [-74.0055, 40.712] },
+                    "properties": { "name": "Finish", "marker": "finish" }
+                }
+            ]
+        };
+
+        // Auto-load example on startup
+        document.getElementById('geojsonData').value = JSON.stringify(exampleGeojson, null, 2);
+        
+        // Auto-submit form to load example route
+        setTimeout(() => {
+            document.getElementById('routeForm').dispatchEvent(new Event('submit'));
+        }, 500);
+    </script>
+</body>
+</html>
