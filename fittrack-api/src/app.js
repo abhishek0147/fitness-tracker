@@ -1,5 +1,7 @@
 require("dotenv").config();
 const express = require("express");
+const path = require("path");
+const cors = require("cors");
 
 const authRoutes = require("./routes/auth");
 const activitiesRoutes = require("./routes/activities");
@@ -15,9 +17,10 @@ const PORT = process.env.PORT || 3000;
 initializeFirebase();
 
 // Middleware
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "..")));
 
 // Request logger
 app.use((req, res, next) => {
@@ -212,14 +215,18 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Something went wrong" });
 });
 
-app.listen(PORT, () => {
-  console.log(`
+const isVercel = process.env.VERCEL === "1" || !!process.env.VERCEL_ENV;
+
+if (!isVercel) {
+  app.listen(PORT, () => {
+    console.log(`
   ╔═══════════════════════════════════════╗
   ║         FitTrack API 🏃‍♂️              ║
   ║   Server running on port ${PORT}         ║
   ║   Visit: http://localhost:${PORT}        ║
   ╚═══════════════════════════════════════╝
   `);
-});
+  });
+}
 
 module.exports = app;
