@@ -1,17 +1,9 @@
 {
   "version": 2,
+  "builds": [
+    { "src": "src/app.js", "use": "@vercel/node" }
+  ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/src/app.js" },
-    { "src": "/login(.*)", "dest": "/src/app.js" },
-    { "src": "/dashboard(.*)", "dest": "/src/app.js" },
-    { "src": "/start-activity(.*)", "dest": "/src/app.js" },
-    { "src": "/save-activity(.*)", "dest": "/src/app.js" },
-    { "src": "/activity-history(.*)", "dest": "/src/app.js" },
-    { "src": "/squad(.*)", "dest": "/src/app.js" },
-    { "src": "/live-tracker-neon(.*)", "dest": "/src/app.js" },
-    { "src": "/map-viewer(.*)", "dest": "/src/app.js" },
-    { "src": "/(.*)\\.html", "dest": "/src/app.js" },
-    { "src": "/", "dest": "/src/app.js" },
-    { "src": "/(.*)", "dest": "/src/app.js" }
+    { "src": "/(.*)", "dest": "src/app.js" }
   ]
 }
