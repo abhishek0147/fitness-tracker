@@ -4,13 +4,13 @@ const authMiddleware = require("../middleware/auth");
 
 const router = express.Router();
 
-// GET /api/feed — activities from people you follow + your own
-router.get("/", authMiddleware, (req, res) => {
+// GET /api/feed
+router.get("/", authMiddleware, async (req, res) => {
   const { page = 1, limit = 20 } = req.query;
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
   try {
-    const activities = db
+    const activities = await db
       .prepare(`
         SELECT 
           a.*,
@@ -29,7 +29,7 @@ router.get("/", authMiddleware, (req, res) => {
       `)
       .all(req.user.id, req.user.id, req.user.id, parseInt(limit), offset);
 
-    const total = db
+    const total = await db
       .prepare(`
         SELECT COUNT(*) as count FROM activities a
         WHERE a.user_id = ?
@@ -49,12 +49,13 @@ router.get("/", authMiddleware, (req, res) => {
       },
     });
   } catch (err) {
+    console.error(err.message);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// GET /api/feed/explore — all public activities (discover athletes)
-router.get("/explore", authMiddleware, (req, res) => {
+// GET /api/feed/explore
+router.get("/explore", authMiddleware, async (req, res) => {
   const { page = 1, limit = 20, type } = req.query;
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -79,10 +80,10 @@ router.get("/explore", authMiddleware, (req, res) => {
     query += " ORDER BY a.date DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), offset);
 
-    const activities = db.prepare(query).all(...params);
-
+    const activities = await db.prepare(query).all(...params);
     return res.json({ activities });
   } catch (err) {
+    console.error(err.message);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
