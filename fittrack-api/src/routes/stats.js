@@ -4,10 +4,10 @@ const authMiddleware = require("../middleware/auth");
 
 const router = express.Router();
 
-// GET /api/stats — personal stats summary
-router.get("/", authMiddleware, (req, res) => {
+// GET /api/stats
+router.get("/", authMiddleware, async (req, res) => {
   try {
-    const overall = db
+    const overall = await db
       .prepare(`
         SELECT
           COUNT(*) as total_activities,
@@ -22,7 +22,7 @@ router.get("/", authMiddleware, (req, res) => {
       `)
       .get(req.user.id);
 
-    const byType = db
+    const byType = await db
       .prepare(`
         SELECT 
           type,
@@ -36,7 +36,7 @@ router.get("/", authMiddleware, (req, res) => {
       `)
       .all(req.user.id);
 
-    const thisWeek = db
+    const thisWeek = await db
       .prepare(`
         SELECT
           COUNT(*) as activities,
@@ -44,11 +44,11 @@ router.get("/", authMiddleware, (req, res) => {
           COALESCE(SUM(duration), 0) as duration_seconds,
           COALESCE(SUM(calories), 0) as calories
         FROM activities
-        WHERE user_id = ? AND date >= datetime('now', '-7 days')
+        WHERE user_id = ? AND date >= NOW() - INTERVAL '7 days'
       `)
       .get(req.user.id);
 
-    const thisMonth = db
+    const thisMonth = await db
       .prepare(`
         SELECT
           COUNT(*) as activities,
@@ -56,14 +56,14 @@ router.get("/", authMiddleware, (req, res) => {
           COALESCE(SUM(duration), 0) as duration_seconds,
           COALESCE(SUM(calories), 0) as calories
         FROM activities
-        WHERE user_id = ? AND date >= datetime('now', 'start of month')
+        WHERE user_id = ? AND date >= DATE_TRUNC('month', NOW())
       `)
       .get(req.user.id);
 
-    const recentTrend = db
+    const recentTrend = await db
       .prepare(`
         SELECT 
-          strftime('%Y-%W', date) as week,
+          TO_CHAR(date, 'IYYY-IW') as week,
           COUNT(*) as activities,
           COALESCE(SUM(distance), 0) as distance_km,
           COALESCE(SUM(duration), 0) as duration_seconds
@@ -82,14 +82,15 @@ router.get("/", authMiddleware, (req, res) => {
       weekly_trend: recentTrend.reverse(),
     });
   } catch (err) {
+    console.error(err.message);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// GET /api/stats/personal-records — PRs
-router.get("/personal-records", authMiddleware, (req, res) => {
+// GET /api/stats/personal-records
+router.get("/personal-records", authMiddleware, async (req, res) => {
   try {
-    const records = db
+    const records = await db
       .prepare(`
         SELECT type,
           MAX(distance) as longest_distance_km,
@@ -103,6 +104,7 @@ router.get("/personal-records", authMiddleware, (req, res) => {
 
     return res.json({ personal_records: records });
   } catch (err) {
+    console.error(err.message);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
