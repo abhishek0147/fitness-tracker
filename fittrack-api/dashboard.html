@@ -1,0 +1,233 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FitTrack – Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--pri:#F97316;--pri2:#FB923C;--bg:#060914;--s:rgba(255,255,255,0.04);--bd:rgba(249,115,22,0.18);--t:#e2e8f0;--mt:rgba(226,232,240,0.38);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;color:var(--t);overflow-x:hidden;}
+.orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:0.08;animation:drift 15s ease-in-out infinite;}
+.o1{width:600px;height:600px;background:var(--pri);top:-200px;left:-200px;}.o2{width:500px;height:500px;background:#7C3AED;bottom:-200px;right:-200px;animation-delay:-5s;}
+@keyframes drift{0%,100%{transform:translate(0,0);}50%{transform:translate(40px,-50px);}}
+.grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(249,115,22,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,0.025) 1px,transparent 1px);background-size:56px 56px;}
+nav{position:sticky;top:0;z-index:100;background:rgba(6,9,20,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;animation:navIn 0.5s ease both;}
+@keyframes navIn{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
+.nav-brand{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--pri),var(--pri2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-r{display:flex;align-items:center;gap:14px;}
+.nav-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--pri2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;border:2px solid rgba(249,115,22,0.35);}
+.nav-name{font-size:13px;color:var(--mt);}
+.btn-out{padding:7px 16px;background:rgba(239,68,68,0.09);border:1px solid rgba(239,68,68,0.22);color:#ef4444;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;transition:all 0.3s;}
+.btn-out:hover{background:rgba(239,68,68,0.18);}
+.page{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:32px 24px 80px;}
+.ain{opacity:0;animation:cardIn 0.6s cubic-bezier(0.22,1,0.36,1) forwards;}
+@keyframes cardIn{from{opacity:0;transform:translateY(26px);}to{opacity:1;transform:translateY(0);}}
+.hero{background:linear-gradient(135deg,rgba(249,115,22,0.1),rgba(251,146,60,0.04));border:1px solid var(--bd);border-radius:20px;padding:32px 38px;display:flex;align-items:center;gap:28px;margin-bottom:24px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-50px;right:-50px;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,rgba(249,115,22,0.12),transparent 70%);}
+.av-big{width:68px;height:68px;border-radius:16px;background:linear-gradient(135deg,var(--pri),var(--pri2));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 0 36px rgba(249,115,22,0.4);}
+.hero-info h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:3px;}
+.hero-info p{color:var(--mt);font-size:13px;}
+.badge{margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.22);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--pri);}
+.dot-g{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.45);}50%{box-shadow:0 0 0 5px rgba(34,197,94,0);}}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:24px;}
+.sc{background:var(--s);border:1px solid var(--bd);border-radius:15px;padding:18px 20px;transition:all 0.3s;}
+.sc:hover{background:rgba(249,115,22,0.06);border-color:rgba(249,115,22,0.32);transform:translateY(-3px);}
+.sc-icon{font-size:21px;margin-bottom:8px;}
+.sc-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--pri),var(--pri2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sc-label{font-size:11px;color:var(--mt);margin-top:3px;text-transform:uppercase;letter-spacing:1px;}
+.sec{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.sec::after{content:'';flex:1;height:1px;background:var(--bd);}
+.graph-box{background:var(--s);border:1px solid var(--bd);border-radius:16px;padding:20px 22px;margin-bottom:24px;}
+#actGraph{width:100%;height:110px;display:block;}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.ac{background:var(--s);border:1px solid var(--bd);border-radius:18px;padding:24px 20px;transition:all 0.4s cubic-bezier(0.22,1,0.36,1);position:relative;overflow:hidden;}
+.ac::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.4s;background:linear-gradient(135deg,rgba(249,115,22,0.07),transparent);}
+.ac:hover{transform:translateY(-5px);border-color:rgba(249,115,22,0.38);box-shadow:0 18px 48px rgba(0,0,0,0.3);}
+.ac:hover::before{opacity:1;}
+.ac.prime{background:linear-gradient(135deg,rgba(249,115,22,0.12),rgba(251,146,60,0.05));border-color:rgba(249,115,22,0.28);}
+.ac-ic{font-size:32px;margin-bottom:12px;display:block;}
+.ac-t{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:5px;}
+.ac-d{font-size:12px;color:var(--mt);line-height:1.55;}
+.ac-arr{display:inline-flex;align-items:center;gap:4px;margin-top:12px;color:var(--pri);font-size:12px;font-weight:600;}
+.act-list{display:flex;flex-direction:column;gap:9px;}
+.ai{background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:13px 17px;display:flex;align-items:center;gap:13px;transition:all 0.3s;}
+.ai:hover{background:rgba(249,115,22,0.04);border-color:rgba(249,115,22,0.24);}
+.ai-ic{width:40px;height:40px;border-radius:10px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ai-info{flex:1;}
+.ai-name{font-size:14px;font-weight:600;color:#fff;margin-bottom:2px;}
+.ai-time{font-size:11px;color:var(--mt);}
+.ai-stats{display:flex;gap:14px;}
+.ai-sv{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--pri);text-align:right;}
+.ai-sl{font-size:10px;color:var(--mt);text-transform:uppercase;text-align:right;}
+.empty{text-align:center;padding:30px;color:var(--mt);font-size:14px;}
+.modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:linear-gradient(135deg,#0d1225,#111a35);border:1px solid var(--bd);border-radius:22px;width:min(480px,94vw);max-height:92vh;overflow-y:auto;padding:32px;position:relative;animation:cardIn 0.35s cubic-bezier(0.22,1,0.36,1);}
+.modal::-webkit-scrollbar{width:4px;}.modal::-webkit-scrollbar-thumb{background:rgba(249,115,22,0.3);border-radius:4px;}
+.modal-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--t);border-radius:8px;padding:5px 10px;font-size:13px;}
+.p-av{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,var(--pri),var(--pri2));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;margin:0 auto 10px;box-shadow:0 0 30px rgba(249,115,22,0.3);}
+.p-handle{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:rgba(249,115,22,0.65);text-align:center;letter-spacing:1px;margin-bottom:6px;}
+.p-code{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px;}
+.p-code-val{font-size:12px;color:var(--mt);background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.18);border-radius:8px;padding:4px 10px;font-family:monospace;}
+.p-code-copy{padding:4px 8px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);color:var(--pri);border-radius:6px;font-size:11px;}
+.p-section-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.pf-row{padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.pf-row:last-of-type{border-bottom:none;}
+.pf-header{display:flex;align-items:center;justify-content:space-between;}
+.pf-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(249,115,22,0.55);margin-bottom:2px;}
+.pf-val{font-size:14px;color:#fff;}
+.pf-edit{padding:5px 10px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);color:var(--pri);border-radius:7px;font-size:12px;font-weight:600;}
+.pf-edit:hover{background:rgba(249,115,22,0.16);}
+.pf-inline{display:none;margin-top:10px;}
+.pf-inline.show{display:flex;gap:8px;flex-wrap:wrap;}
+.pf-input{flex:1;min-width:120px;padding:9px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(249,115,22,0.25);border-radius:9px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;}
+.pf-input:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(249,115,22,0.1);}
+.pf-save{padding:9px 14px;background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:700;}
+.pf-cancel{padding:9px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--mt);border-radius:9px;font-size:12px;}
+.p-div{height:1px;background:var(--bd);margin:16px 0;}
+.edit-toast{padding:10px 14px;border-radius:9px;font-size:13px;margin-top:10px;display:none;}
+.edit-toast.ok{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.22);display:block;}
+.edit-toast.err{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.22);display:block;}
+.btn-logout-m{width:100%;margin-top:14px;padding:12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.22);color:#ef4444;border-radius:11px;font-family:'DM Sans',sans-serif;font-size:14px;transition:all 0.3s;}
+.btn-logout-m:hover{background:rgba(239,68,68,0.15);}
+@media(max-width:860px){.stats-row{grid-template-columns:repeat(2,1fr);}.actions{grid-template-columns:1fr 1fr;}}
+@media(max-width:560px){.actions{grid-template-columns:1fr;}.hero{flex-direction:column;gap:16px;padding:22px;}.stats-row{grid-template-columns:repeat(2,1fr);}nav{padding:0 16px;}}
+</style></head><body>
+<div id="pt"></div>
+<div class="orbs"><div class="orb o1"></div><div class="orb o2"></div></div>
+<div class="grid"></div>
+<nav>
+  <div class="nav-brand">🏃 FitTrack</div>
+  <div class="nav-r">
+    <div class="nav-name" id="navName"></div>
+    <div class="nav-av" id="navAv">?</div>
+    <button class="btn-out" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+<div class="page">
+  <div class="hero ain" style="animation-delay:0.04s">
+    <div class="av-big" id="heroBig">?</div>
+    <div class="hero-info">
+      <h2 id="heroName">Hey there 👋</h2>
+      <p id="heroEmail">—</p>
+      <div class="badge"><div class="dot-g"></div> Active Athlete</div>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="sc ain" style="animation-delay:0.1s"><div class="sc-icon">🏃</div><div class="sc-val" id="sActs">0</div><div class="sc-label">Activities</div></div>
+    <div class="sc ain" style="animation-delay:0.16s"><div class="sc-icon">📍</div><div class="sc-val" id="sDist">0.0</div><div class="sc-label">Total km</div></div>
+    <div class="sc ain" style="animation-delay:0.22s"><div class="sc-icon">⏱</div><div class="sc-val" id="sHrs">0.0</div><div class="sc-label">Hours</div></div>
+    <div class="sc ain" style="animation-delay:0.28s"><div class="sc-icon">🔥</div><div class="sc-val" id="sCal">0</div><div class="sc-label">Calories</div></div>
+  </div>
+  <div class="sec ain" style="animation-delay:0.32s">Activeness — Last 7 Days</div>
+  <div class="graph-box ain" style="animation-delay:0.35s"><canvas id="actGraph"></canvas></div>
+  <div class="sec ain" style="animation-delay:0.38s">What do you want to do?</div>
+  <div class="actions">
+    <div class="ac prime ain" style="animation-delay:0.42s" onclick="go('/start-activity.html')"><span class="ac-ic">🗺️</span><div class="ac-t">Start Activity</div><div class="ac-d">Track live with GPS.</div><div class="ac-arr">Begin →</div></div>
+    <div class="ac ain" style="animation-delay:0.47s" onclick="go('/activity-history.html')"><span class="ac-ic">📚</span><div class="ac-t">Activity History</div><div class="ac-d">Review & share routes.</div><div class="ac-arr">View →</div></div>
+    <div class="ac ain" style="animation-delay:0.52s" onclick="go('/squad.html')"><span class="ac-ic">⚔️</span><div class="ac-t">Squad</div><div class="ac-d">Compete & chat with friends.</div><div class="ac-arr">Open →</div></div>
+    <div class="ac ain" style="animation-delay:0.57s" onclick="openProfile()"><span class="ac-ic">👤</span><div class="ac-t">My Profile</div><div class="ac-d">Edit details & settings.</div><div class="ac-arr">View →</div></div>
+  </div>
+  <div class="sec ain" style="animation-delay:0.6s">Recent Activities</div>
+  <div class="act-list ain" id="actList" style="animation-delay:0.63s"><div class="empty">Loading...</div></div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-bg" id="profileModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeProfile()">✕</button>
+    <div class="p-av" id="pAv">?</div>
+    <div class="p-handle" id="pHandle">@username</div>
+    <div class="p-code">
+      <span style="font-size:11px;color:var(--mt)">Profile Code:</span>
+      <span class="p-code-val" id="pCode">FT-000000</span>
+      <button class="p-code-copy" onclick="copyCode()">📋 Copy</button>
+    </div>
+    <div class="p-section-title">Profile Details</div>
+    <div class="pf-row">
+      <div class="pf-header"><div><div class="pf-label">First Name</div><div class="pf-val" id="pfFirst">—</div></div><button class="pf-edit" onclick="toggleField('inFirst')">Edit</button></div>
+      <div class="pf-inline" id="inFirst"><input class="pf-input" id="inFirstVal" placeholder="First name"/><button class="pf-save" onclick="saveField('first')">Save</button><button class="pf-cancel" onclick="cancelField('inFirst')">✕</button></div>
+    </div>
+    <div class="pf-row">
+      <div class="pf-header"><div><div class="pf-label">Last Name</div><div class="pf-val" id="pfLast">—</div></div><button class="pf-edit" onclick="toggleField('inLast')">Edit</button></div>
+      <div class="pf-inline" id="inLast"><input class="pf-input" id="inLastVal" placeholder="Last name"/><button class="pf-save" onclick="saveField('last')">Save</button><button class="pf-cancel" onclick="cancelField('inLast')">✕</button></div>
+    </div>
+    <div class="pf-row">
+      <div class="pf-header"><div><div class="pf-label">Email</div><div class="pf-val" id="pfEmail">—</div></div><button class="pf-edit" onclick="toggleField('inEmail')">Edit</button></div>
+      <div class="pf-inline" id="inEmail"><input class="pf-input" id="inEmailVal" type="email" placeholder="email@example.com"/><button class="pf-save" onclick="saveField('email')">Save</button><button class="pf-cancel" onclick="cancelField('inEmail')">✕</button></div>
+    </div>
+    <div class="pf-row">
+      <div class="pf-header"><div><div class="pf-label">Phone</div><div class="pf-val" id="pfPhone">Not set</div></div><button class="pf-edit" onclick="toggleField('inPhone')">Edit</button></div>
+      <div class="pf-inline" id="inPhone"><input class="pf-input" id="inPhoneVal" type="tel" placeholder="+91 98765 43210"/><button class="pf-save" onclick="saveField('phone')">Save</button><button class="pf-cancel" onclick="cancelField('inPhone')">✕</button></div>
+    </div>
+    <div class="pf-row">
+      <div class="pf-header"><div><div class="pf-label">Password</div><div class="pf-val">••••••••</div></div><button class="pf-edit" onclick="toggleField('inPass')">Change</button></div>
+      <div class="pf-inline" id="inPass" style="flex-direction:column;gap:6px">
+        <input class="pf-input" id="inPassNew" type="password" placeholder="New password (min 6 chars)"/>
+        <input class="pf-input" id="inPassConfirm" type="password" placeholder="Confirm new password"/>
+        <div style="display:flex;gap:8px"><button class="pf-save" onclick="saveField('password')">Save</button><button class="pf-cancel" onclick="cancelField('inPass')">✕</button></div>
+      </div>
+    </div>
+    <div class="p-div"></div>
+    <div class="edit-toast" id="editToast"></div>
+    <button class="btn-logout-m" onclick="logout()">🚪 Sign Out</button>
+  </div>
+</div>
+
+<script>
+function initT(){const t=document.getElementById('pt');if(!t)return;t.style.cssText='position:fixed;inset:0;z-index:9999;background:#F97316;transform:scaleX(1);transform-origin:right;pointer-events:none;will-change:transform;';requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transition='transform 0.6s cubic-bezier(0.22,1,0.36,1)';t.style.transform='scaleX(0)';}));}
+window.addEventListener('pageshow',e=>{if(e.persisted)initT();});
+function go(url){const t=document.getElementById('pt');if(!t){location.href=url;return;}t.style.cssText='position:fixed;inset:0;z-index:9999;background:#F97316;transform:scaleX(0);transform-origin:left;pointer-events:none;will-change:transform;';requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transition='transform 0.45s cubic-bezier(0.77,0,0.18,1)';t.style.transform='scaleX(1)';setTimeout(()=>location.href=url,460);}));}
+function initCursor(){const s=document.createElement('style');s.textContent='*{cursor:none!important;}';document.head.appendChild(s);const dot=document.createElement('div'),ring=document.createElement('div');dot.style.cssText='position:fixed;width:10px;height:10px;border-radius:50%;background:#F97316;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);top:-20px;left:-20px;';ring.style.cssText='position:fixed;width:34px;height:34px;border-radius:50%;border:2px solid rgba(249,115,22,0.7);pointer-events:none;z-index:99998;transform:translate(-50%,-50%);top:-20px;left:-20px;transition:width 0.2s,height 0.2s,border-color 0.2s,opacity 0.2s;opacity:0.55;';document.body.appendChild(dot);document.body.appendChild(ring);let mx=-20,my=-20,rx=-20,ry=-20;document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';});(function lerp(){rx+=(mx-rx)*0.18;ry+=(my-ry)*0.18;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(lerp);})();document.addEventListener('mousedown',()=>{ring.style.width='22px';ring.style.height='22px';ring.style.opacity='0.9';});document.addEventListener('mouseup',()=>{ring.style.width='34px';ring.style.height='34px';ring.style.opacity='0.55';});document.addEventListener('mouseover',e=>{if(e.target.closest('button,a,[onclick],[role=button]')){ring.style.width='44px';ring.style.height='44px';ring.style.opacity='0.7';ring.style.borderColor='#FB923C';}});document.addEventListener('mouseout',e=>{if(e.target.closest('button,a,[onclick],[role=button]')){ring.style.width='34px';ring.style.height='34px';ring.style.opacity='0.55';ring.style.borderColor='rgba(249,115,22,0.7)';}});}
+initT();initCursor();
+const token=localStorage.getItem('fittrack_token');
+if(!token)location.href='/login.html';
+let user=JSON.parse(localStorage.getItem('fittrack_user')||'{}');
+function ini(){return((user.name||'?')[0]).toUpperCase();}
+function getCode(){return'FT-'+(user.id||'000000').toString().slice(-6).padStart(6,'0');}
+function hydrate(){const i=ini();document.getElementById('navName').textContent=user.name||'';document.getElementById('navAv').textContent=i;document.getElementById('heroBig').textContent=i;document.getElementById('heroName').textContent='Hey, '+(user.name||'Athlete')+' 👋';document.getElementById('heroEmail').textContent=user.email||'';}
+hydrate();
+function logout(){localStorage.removeItem('fittrack_token');localStorage.removeItem('fittrack_user');go('/login.html');}
+function getH(){try{return JSON.parse(localStorage.getItem('fittrack_activity_history')||'[]');}catch{return[];}}
+function loadStats(){const h=getH();const d=h.reduce((s,a)=>s+parseFloat(a.distance||0),0);const sec=h.reduce((s,a)=>{const p=(a.duration||'00:00:00').split(':').map(Number);return s+(p[0]*3600)+(p[1]*60)+(p[2]||0);},0);const cal=h.reduce((s,a)=>s+parseInt(a.calories||0),0);document.getElementById('sActs').textContent=h.length;document.getElementById('sDist').textContent=d.toFixed(1);document.getElementById('sHrs').textContent=(sec/3600).toFixed(1);document.getElementById('sCal').textContent=cal;}
+function renderGraph(){const h=getH();const canvas=document.getElementById('actGraph');const W=canvas.parentElement.clientWidth-44;canvas.width=W*devicePixelRatio;canvas.height=110*devicePixelRatio;canvas.style.width=W+'px';canvas.style.height='110px';const ctx=canvas.getContext('2d');ctx.scale(devicePixelRatio,devicePixelRatio);const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push({label:d.toLocaleDateString('en',{weekday:'short'}),dist:0});}h.forEach(a=>{const saved=new Date(a.savedAt||a.finishedAt||Date.now());const diff=Math.floor((Date.now()-saved)/86400000);if(diff>=0&&diff<7){days[6-diff].dist+=parseFloat(a.distance||0);}});const maxD=Math.max(...days.map(d=>d.dist),0.1);const bw=Math.floor((W-40)/7)-4;days.forEach((d,i)=>{const x=20+i*((W-40)/7);const bh=Math.max((d.dist/maxD)*78,d.dist>0?5:0);ctx.fillStyle='rgba(249,115,22,0.07)';ctx.beginPath();ctx.roundRect(x,8,bw,78,4);ctx.fill();if(d.dist>0){const g=ctx.createLinearGradient(0,86-bh,0,86);g.addColorStop(0,'#F97316');g.addColorStop(1,'rgba(251,146,60,0.6)');ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(x,86-bh,bw,bh,4);ctx.fill();}ctx.fillStyle='rgba(226,232,240,0.3)';ctx.font='10px DM Sans,sans-serif';ctx.textAlign='center';ctx.fillText(d.label,x+bw/2,105);if(d.dist>0){ctx.fillStyle='rgba(249,115,22,0.85)';ctx.font='bold 9px DM Sans,sans-serif';ctx.fillText(d.dist.toFixed(1),x+bw/2,82-bh);}});}
+function loadRecent(){const list=document.getElementById('actList');const h=getH().slice().reverse().slice(0,5);if(!h.length){list.innerHTML='<div class="empty">No activities yet — start your first one! 🏃</div>';return;}const ic={run:'🏃',ride:'🚴',cycle:'🚴',walk:'🚶',hike:'⛰️',swim:'🏊',workout:'💪',other:'🎯'};list.innerHTML=h.map((a,i)=>`<div class="ai" style="opacity:0;animation:cardIn 0.5s ${0.63+i*0.07}s ease forwards"><div class="ai-ic">${ic[a.type?.toLowerCase()]||'🎯'}</div><div class="ai-info"><div class="ai-name">${a.title||'Activity'}</div><div class="ai-time">${a.savedAt?new Date(a.savedAt).toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):(a.finishedAt||'')}</div></div><div class="ai-stats"><div><div class="ai-sv">${parseFloat(a.distance||0).toFixed(2)} km</div><div class="ai-sl">Distance</div></div><div><div class="ai-sv">${a.duration||'—'}</div><div class="ai-sl">Duration</div></div></div></div>`).join('');}
+/* PROFILE */
+function openProfile(){
+  const stored=JSON.parse(localStorage.getItem('fittrack_profile')||'{}');
+  const parts=(user.name||'').split(' ');
+  document.getElementById('pAv').textContent=ini();
+  document.getElementById('pHandle').textContent='@'+(user.name||'user').toLowerCase().replace(/\s+/g,'');
+  document.getElementById('pCode').textContent=getCode();
+  document.getElementById('pfFirst').textContent=stored.firstName||parts[0]||'—';
+  document.getElementById('pfLast').textContent=stored.lastName||parts[1]||'—';
+  document.getElementById('pfEmail').textContent=user.email||'—';
+  document.getElementById('pfPhone').textContent=stored.phone||'Not set';
+  document.getElementById('inFirstVal').value=stored.firstName||parts[0]||'';
+  document.getElementById('inLastVal').value=stored.lastName||parts[1]||'';
+  document.getElementById('inEmailVal').value=user.email||'';
+  document.getElementById('inPhoneVal').value=stored.phone||'';
+  document.getElementById('editToast').className='edit-toast';
+  ['inFirst','inLast','inEmail','inPhone','inPass'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  document.getElementById('profileModal').classList.add('open');
+}
+function closeProfile(){document.getElementById('profileModal').classList.remove('open');}
+document.getElementById('profileModal').addEventListener('click',e=>{if(e.target===document.getElementById('profileModal'))closeProfile();});
+function toggleField(id){const el=document.getElementById(id);const shown=el.classList.contains('show');['inFirst','inLast','inEmail','inPhone','inPass'].forEach(i=>document.getElementById(i).classList.remove('show'));if(!shown)el.classList.add('show');}
+function cancelField(id){document.getElementById(id).classList.remove('show');}
+function toast(msg,type){const t=document.getElementById('editToast');t.className='edit-toast '+type;t.textContent=msg;setTimeout(()=>t.className='edit-toast',3000);}
+function saveField(field){
+  const stored=JSON.parse(localStorage.getItem('fittrack_profile')||'{}');
+  if(field==='first'){const v=document.getElementById('inFirstVal').value.trim();if(!v)return;stored.firstName=v;document.getElementById('pfFirst').textContent=v;cancelField('inFirst');}
+  else if(field==='last'){const v=document.getElementById('inLastVal').value.trim();stored.lastName=v;document.getElementById('pfLast').textContent=v||'—';cancelField('inLast');}
+  else if(field==='email'){const v=document.getElementById('inEmailVal').value.trim();if(!v.includes('@'))return toast('❌ Invalid email','err');user.email=v;localStorage.setItem('fittrack_user',JSON.stringify(user));document.getElementById('pfEmail').textContent=v;document.getElementById('heroEmail').textContent=v;cancelField('inEmail');}
+  else if(field==='phone'){stored.phone=document.getElementById('inPhoneVal').value.trim();document.getElementById('pfPhone').textContent=stored.phone||'Not set';cancelField('inPhone');}
+  else if(field==='password'){const np=document.getElementById('inPassNew').value,cp=document.getElementById('inPassConfirm').value;if(np.length<6)return toast('❌ Min 6 characters','err');if(np!==cp)return toast('❌ Passwords do not match','err');cancelField('inPass');}
+  if(field==='first'||field==='last'){const name=((stored.firstName||'')+' '+(stored.lastName||'')).trim();if(name){user.name=name;localStorage.setItem('fittrack_user',JSON.stringify(user));hydrate();document.getElementById('pAv').textContent=ini();document.getElementById('pHandle').textContent='@'+name.toLowerCase().replace(/\s+/g,'');}}
+  localStorage.setItem('fittrack_profile',JSON.stringify(stored));
+  toast('✅ Saved!','ok');
+}
+function copyCode(){navigator.clipboard.writeText(document.getElementById('pCode').textContent);const b=event.target;b.textContent='✅ Copied!';setTimeout(()=>b.textContent='📋 Copy',2000);}
+loadStats();loadRecent();setTimeout(renderGraph,80);window.addEventListener('resize',()=>setTimeout(renderGraph,80));
+</script></body></html>

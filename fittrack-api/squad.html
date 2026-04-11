@@ -1,0 +1,307 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FitTrack – Squad</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--pri:#F97316;--pri2:#FB923C;--acc:#38BDF8;--bg:#060914;--s:rgba(255,255,255,0.04);--bd:rgba(249,115,22,0.18);--t:#e2e8f0;--mt:rgba(226,232,240,0.38);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;color:var(--t);overflow-x:hidden;}
+.orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:0.08;animation:drift 15s ease-in-out infinite;}
+.o1{width:600px;height:600px;background:var(--pri);top:-200px;right:-100px;}.o2{width:400px;height:400px;background:#7C3AED;bottom:-100px;left:-100px;animation-delay:-5s;}
+@keyframes drift{0%,100%{transform:translate(0,0);}50%{transform:translate(30px,-40px);}}
+.grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(249,115,22,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,0.025) 1px,transparent 1px);background-size:56px 56px;}
+nav{position:sticky;top:0;z-index:100;background:rgba(6,9,20,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);padding:0 32px;height:60px;display:flex;align-items:center;gap:14px;animation:navIn 0.5s ease both;}
+@keyframes navIn{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
+.back{display:flex;align-items:center;gap:7px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);color:var(--pri);border-radius:9px;padding:7px 13px;font-size:13px;font-weight:600;transition:all 0.3s;}
+.back:hover{background:rgba(249,115,22,0.15);}
+.nav-t{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;background:linear-gradient(135deg,var(--pri),var(--pri2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;flex:1;}
+.page{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 24px 80px;display:grid;grid-template-columns:320px 1fr;gap:22px;}
+.ain{opacity:0;animation:cardIn 0.6s cubic-bezier(0.22,1,0.36,1) forwards;}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+.card{background:var(--s);border:1px solid var(--bd);border-radius:18px;overflow:hidden;}
+.card-head{padding:18px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;}
+/* ADD MEMBER */
+.add-form{padding:16px 20px;border-bottom:1px solid rgba(249,115,22,0.08);}
+.add-row{display:flex;gap:8px;}
+.add-input{flex:1;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(249,115,22,0.2);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;}
+.add-input:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(249,115,22,0.1);}
+.add-input::placeholder{color:rgba(255,255,255,0.18);}
+.btn-add{padding:10px 16px;background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;white-space:nowrap;transition:all 0.3s;}
+.btn-add:hover{transform:translateY(-2px);box-shadow:0 5px 18px rgba(249,115,22,0.4);}
+.add-msg{margin-top:8px;font-size:12px;display:none;}
+.add-msg.ok{color:#22c55e;display:block;}.add-msg.err{color:#ef4444;display:block;}
+/* MEMBER LIST */
+.member-list{padding:8px 0;max-height:320px;overflow-y:auto;}
+.member-list::-webkit-scrollbar{width:3px;}.member-list::-webkit-scrollbar-thumb{background:rgba(249,115,22,0.3);border-radius:3px;}
+.member{display:flex;align-items:center;gap:12px;padding:10px 20px;transition:background 0.2s;cursor:pointer;}
+.member:hover{background:rgba(249,115,22,0.05);}
+.member.active{background:rgba(249,115,22,0.08);border-left:3px solid var(--pri);}
+.m-av{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;}
+.m-info{flex:1;}
+.m-name{font-size:13px;font-weight:600;color:#fff;}
+.m-sub{font-size:11px;color:var(--mt);}
+.m-online{width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;}
+.m-offline{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);flex-shrink:0;}
+/* LEADERBOARD */
+.lb-list{padding:12px 20px;display:flex;flex-direction:column;gap:8px;}
+.lb-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.1);border-radius:12px;transition:all 0.3s;}
+.lb-item:hover{background:rgba(249,115,22,0.09);}
+.lb-rank{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;width:26px;text-align:center;}
+.lb-av{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;}
+.lb-info{flex:1;}
+.lb-name{font-size:13px;font-weight:600;color:#fff;}
+.lb-stat{font-size:11px;color:var(--mt);}
+.lb-dist{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--pri);}
+/* RIGHT PANEL */
+.right-col{display:flex;flex-direction:column;gap:18px;}
+/* CHAT */
+.chat-card{background:var(--s);border:1px solid var(--bd);border-radius:18px;display:flex;flex-direction:column;flex:1;}
+.chat-msgs{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:280px;max-height:360px;}
+.chat-msgs::-webkit-scrollbar{width:3px;}.chat-msgs::-webkit-scrollbar-thumb{background:rgba(249,115,22,0.25);border-radius:3px;}
+.msg-row{display:flex;gap:8px;align-items:flex-end;}
+.msg-row.mine{flex-direction:row-reverse;}
+.msg-av{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.msg-bubble{max-width:72%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.5;}
+.msg-row:not(.mine) .msg-bubble{background:rgba(255,255,255,0.07);border-bottom-left-radius:4px;}
+.msg-row.mine .msg-bubble{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-bottom-right-radius:4px;}
+.msg-meta{font-size:10px;color:var(--mt);margin-top:3px;text-align:right;}
+.msg-row:not(.mine) .msg-meta{text-align:left;}
+.msg-sender{font-size:10px;color:rgba(249,115,22,0.7);margin-bottom:2px;}
+.chat-input-row{padding:14px 16px;border-top:1px solid var(--bd);display:flex;gap:8px;}
+.chat-input{flex:1;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(249,115,22,0.18);border-radius:12px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;resize:none;outline:none;}
+.chat-input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(249,115,22,0.08);}
+.btn-send{padding:10px 18px;background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;border-radius:12px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;transition:all 0.3s;}
+.btn-send:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(249,115,22,0.4);}
+/* CHALLENGE CARD */
+.chal-list{padding:12px 20px;display:flex;flex-direction:column;gap:10px;}
+.chal{padding:14px;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.14);border-radius:12px;}
+.chal-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:6px;}
+.chal-bar-bg{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+.chal-bar{height:100%;background:linear-gradient(90deg,var(--pri),var(--pri2));border-radius:3px;transition:width 0.6s ease;}
+.chal-meta{display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:var(--mt);}
+.empty-state{padding:24px 20px;text-align:center;color:var(--mt);font-size:13px;}
+/* SHARE ACHIEVEMENT BUTTON */
+.btn-share-ach{padding:6px 12px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);color:var(--acc);border-radius:7px;font-size:12px;transition:all 0.3s;margin-top:8px;}
+.btn-share-ach:hover{background:rgba(56,189,248,0.18);}
+@media(max-width:860px){.page{grid-template-columns:1fr;}}
+</style></head><body>
+<div id="pt"></div>
+<div class="orbs"><div class="orb o1"></div><div class="orb o2"></div></div>
+<div class="grid"></div>
+<nav>
+  <button class="back" onclick="go('/dashboard.html')">← Dashboard</button>
+  <div class="nav-t">⚔️ Squad</div>
+</nav>
+<div class="page">
+  <!-- LEFT: Members + Leaderboard -->
+  <div style="display:flex;flex-direction:column;gap:18px">
+    <!-- Members -->
+    <div class="card ain" style="animation-delay:0.05s">
+      <div class="card-head">
+        <div class="card-title">👥 Squad Members</div>
+        <div style="font-size:11px;color:var(--mt)" id="memberCount">0 members</div>
+      </div>
+      <div class="add-form">
+        <div class="add-row">
+          <input class="add-input" id="addInput" placeholder="Email or Profile Code (FT-XXXXXX)"/>
+          <button class="btn-add" onclick="addMember()">+ Add</button>
+        </div>
+        <div class="add-msg" id="addMsg"></div>
+      </div>
+      <div class="member-list" id="memberList">
+        <div class="empty-state">Add members using their email or profile code</div>
+      </div>
+    </div>
+    <!-- Leaderboard -->
+    <div class="card ain" style="animation-delay:0.12s">
+      <div class="card-head"><div class="card-title">🏆 This Week's Leaderboard</div></div>
+      <div class="lb-list" id="lbList">
+        <div class="empty-state">Add members to see leaderboard</div>
+      </div>
+    </div>
+    <!-- Challenges -->
+    <div class="card ain" style="animation-delay:0.18s">
+      <div class="card-head">
+        <div class="card-title">🎯 Active Challenges</div>
+        <button onclick="createChallenge()" style="padding:5px 10px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);color:var(--pri);border-radius:7px;font-size:12px;">+ New</button>
+      </div>
+      <div class="chal-list" id="chalList">
+        <div class="empty-state">No active challenges yet</div>
+      </div>
+    </div>
+  </div>
+  <!-- RIGHT: Chat + Feed -->
+  <div class="right-col">
+    <div class="card ain" style="animation-delay:0.08s;flex:1">
+      <div class="card-head">
+        <div class="card-title" id="chatTitle">💬 Squad Chat</div>
+        <div style="font-size:11px;color:#22c55e" id="chatStatus">● Live</div>
+      </div>
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="empty-state" style="margin:auto">👋 Add squad members and start chatting!</div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"/>
+        <button class="btn-send" onclick="sendMsg()">Send →</button>
+      </div>
+    </div>
+    <!-- Activity Feed -->
+    <div class="card ain" style="animation-delay:0.14s">
+      <div class="card-head"><div class="card-title">📡 Squad Activity Feed</div></div>
+      <div id="squadFeed" style="padding:12px 20px;display:flex;flex-direction:column;gap:10px;max-height:280px;overflow-y:auto">
+        <div class="empty-state">Activities shared by squad members will appear here</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function initT(){const t=document.getElementById('pt');if(!t)return;t.style.cssText='position:fixed;inset:0;z-index:9999;background:#F97316;transform:scaleX(1);transform-origin:right;pointer-events:none;will-change:transform;';requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transition='transform 0.6s cubic-bezier(0.22,1,0.36,1)';t.style.transform='scaleX(0)';}));}
+window.addEventListener('pageshow',e=>{if(e.persisted)initT();});
+function go(url){const t=document.getElementById('pt');if(!t){location.href=url;return;}t.style.cssText='position:fixed;inset:0;z-index:9999;background:#F97316;transform:scaleX(0);transform-origin:left;pointer-events:none;will-change:transform;';requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transition='transform 0.45s cubic-bezier(0.77,0,0.18,1)';t.style.transform='scaleX(1)';setTimeout(()=>location.href=url,460);}));}
+function initCursor(){const s=document.createElement('style');s.textContent='*{cursor:none!important;}';document.head.appendChild(s);const dot=document.createElement('div'),ring=document.createElement('div');dot.style.cssText='position:fixed;width:10px;height:10px;border-radius:50%;background:#F97316;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);top:-20px;left:-20px;';ring.style.cssText='position:fixed;width:34px;height:34px;border-radius:50%;border:2px solid rgba(249,115,22,0.7);pointer-events:none;z-index:99998;transform:translate(-50%,-50%);top:-20px;left:-20px;transition:width 0.2s,height 0.2s,border-color 0.2s,opacity 0.2s;opacity:0.55;';document.body.appendChild(dot);document.body.appendChild(ring);let mx=-20,my=-20,rx=-20,ry=-20;document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';});(function lerp(){rx+=(mx-rx)*0.18;ry+=(my-ry)*0.18;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(lerp);})();document.addEventListener('mousedown',()=>{ring.style.width='22px';ring.style.height='22px';ring.style.opacity='0.9';});document.addEventListener('mouseup',()=>{ring.style.width='34px';ring.style.height='34px';ring.style.opacity='0.55';});document.addEventListener('mouseover',e=>{if(e.target.closest('button,a,[onclick],[role=button]')){ring.style.width='44px';ring.style.height='44px';ring.style.opacity='0.7';ring.style.borderColor='#FB923C';}});document.addEventListener('mouseout',e=>{if(e.target.closest('button,a,[onclick],[role=button]')){ring.style.width='34px';ring.style.height='34px';ring.style.opacity='0.55';ring.style.borderColor='rgba(249,115,22,0.7)';}});}
+initT();initCursor();
+if(!localStorage.getItem('fittrack_token'))location.href='/login.html';
+const user=JSON.parse(localStorage.getItem('fittrack_user')||'{}');
+const myIni=(user.name||'?')[0].toUpperCase();
+const myCode='FT-'+(user.id||'000000').toString().slice(-6).padStart(6,'0');
+const COLORS=['#F97316','#38BDF8','#A78BFA','#34D399','#F472B6','#FBBF24'];
+function getSquad(){try{return JSON.parse(localStorage.getItem('fittrack_squad')||'[]');}catch{return[];}}
+function saveSquad(s){localStorage.setItem('fittrack_squad',JSON.stringify(s));}
+function getMsgs(){try{return JSON.parse(localStorage.getItem('fittrack_squad_msgs')||'[]');}catch{return[];}}
+function saveMsgs(m){localStorage.setItem('fittrack_squad_msgs',JSON.stringify(m));}
+function getChals(){try{return JSON.parse(localStorage.getItem('fittrack_squad_chals')||'[]');}catch{return[];}}
+function saveChals(c){localStorage.setItem('fittrack_squad_chals',JSON.stringify(c));}
+
+function colorFor(name){const h=name.split('').reduce((a,c)=>a+c.charCodeAt(0),0);return COLORS[h%COLORS.length];}
+
+function renderMembers(){
+  const squad=getSquad();
+  const list=document.getElementById('memberList');
+  document.getElementById('memberCount').textContent=squad.length+' member'+(squad.length!==1?'s':'');
+  if(!squad.length){list.innerHTML='<div class="empty-state">Add members using their email or profile code</div>';return;}
+  // Always add self first
+  const all=[{name:user.name||'You',email:user.email||'',code:myCode,isMe:true},...squad];
+  list.innerHTML=all.map(m=>`
+    <div class="member" onclick="selectMember('${m.name}')">
+      <div class="m-av" style="background:${colorFor(m.name)}">${m.name[0].toUpperCase()}</div>
+      <div class="m-info"><div class="m-name">${m.name}${m.isMe?' (You)':''}</div><div class="m-sub">${m.code||m.email||''}</div></div>
+      <div class="${m.isMe?'m-online':'m-offline'}"></div>
+    </div>`).join('');
+}
+
+function addMember(){
+  const val=document.getElementById('addInput').value.trim();
+  const msg=document.getElementById('addMsg');
+  msg.className='add-msg';
+  if(!val){msg.className='add-msg err';msg.textContent='❌ Enter an email or profile code';return;}
+  const squad=getSquad();
+  if(squad.some(m=>m.email===val||m.code===val)){msg.className='add-msg err';msg.textContent='❌ Already in squad';return;}
+  // Generate a plausible member from code/email
+  const isCode=/^FT-\d{6}$/i.test(val);
+  const name=isCode?'Athlete '+val.slice(-4):(val.split('@')[0].split('.').map(w=>w[0].toUpperCase()+w.slice(1)).join(' '));
+  const entry={name,email:isCode?'':val,code:isCode?val.toUpperCase():'FT-'+Math.floor(100000+Math.random()*900000),joinedAt:Date.now()};
+  squad.push(entry);saveSquad(squad);
+  document.getElementById('addInput').value='';
+  msg.className='add-msg ok';msg.textContent='✅ '+name+' added to squad!';
+  setTimeout(()=>msg.className='add-msg',3000);
+  renderMembers();renderLeaderboard();
+  // Auto post join message
+  postSystemMsg(name+' joined the squad! 🎉');
+}
+
+function selectMember(name){
+  document.querySelectorAll('.member').forEach(m=>m.classList.toggle('active',m.querySelector('.m-name').textContent.includes(name)));
+}
+
+function renderLeaderboard(){
+  const squad=getSquad();
+  const h=JSON.parse(localStorage.getItem('fittrack_activity_history')||'[]');
+  const myDist=h.reduce((s,a)=>s+parseFloat(a.distance||0),0);
+  const all=[{name:user.name||'You',dist:myDist,isMe:true},...squad.map(m=>({name:m.name,dist:Math.random()*15,isMe:false}))];
+  all.sort((a,b)=>b.dist-a.dist);
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('lbList').innerHTML=all.length>1?all.map((m,i)=>`
+    <div class="lb-item">
+      <div class="lb-rank">${medals[i]||i+1}</div>
+      <div class="lb-av" style="background:${colorFor(m.name)}">${m.name[0].toUpperCase()}</div>
+      <div class="lb-info"><div class="lb-name">${m.name}${m.isMe?' (You)':''}</div><div class="lb-stat">This week</div></div>
+      <div class="lb-dist">${m.dist.toFixed(1)} km</div>
+    </div>`).join('')
+    :'<div class="empty-state">Add members to see leaderboard</div>';
+}
+
+function renderChat(){
+  const msgs=getMsgs();
+  const box=document.getElementById('chatMsgs');
+  if(!msgs.length){box.innerHTML='<div class="empty-state" style="margin:auto">👋 Add squad members and start chatting!</div>';return;}
+  box.innerHTML=msgs.map(m=>`
+    <div class="msg-row ${m.isMe?'mine':''}">
+      <div class="msg-av" style="background:${colorFor(m.sender)}">${m.sender[0].toUpperCase()}</div>
+      <div>
+        ${!m.isMe?`<div class="msg-sender">${m.sender}</div>`:''}
+        <div class="msg-bubble">${m.text}</div>
+        <div class="msg-meta">${new Date(m.ts).toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+    </div>`).join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+function sendMsg(){
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();if(!text)return;
+  const msgs=getMsgs();
+  msgs.push({sender:user.name||'You',text,ts:Date.now(),isMe:true});
+  saveMsgs(msgs);input.value='';
+  renderChat();
+  // Simulate reply after delay if squad has members
+  const squad=getSquad();
+  if(squad.length){setTimeout(()=>{const m=getSquad();if(!m.length)return;const r=m[Math.floor(Math.random()*m.length)];const replies=['Nice! 💪','Keep going! 🔥','Amazing effort! 🏅','Let\'s go! 🚀','That\'s great! 👏'];const msgs2=getMsgs();msgs2.push({sender:r.name,text:replies[Math.floor(Math.random()*replies.length)],ts:Date.now(),isMe:false});saveMsgs(msgs2);renderChat();},1200+Math.random()*2000);}
+}
+
+function postSystemMsg(text){const msgs=getMsgs();msgs.push({sender:'FitTrack',text,ts:Date.now(),isMe:false,isSystem:true});saveMsgs(msgs);renderChat();}
+
+function shareAchievement(title,desc){
+  const msgs=getMsgs();
+  msgs.push({sender:user.name||'You',text:`🏆 Achievement Unlocked: ${title}\n${desc}`,ts:Date.now(),isMe:true});
+  saveMsgs(msgs);renderChat();
+}
+
+function renderChallenges(){
+  const chals=getChals();
+  const el=document.getElementById('chalList');
+  if(!chals.length){el.innerHTML='<div class="empty-state">No active challenges yet</div>';return;}
+  el.innerHTML=chals.map(c=>{
+    const pct=Math.min(100,(parseFloat(c.current||0)/parseFloat(c.target||1))*100);
+    return`<div class="chal"><div class="chal-title">${c.title}</div><div class="chal-bar-bg"><div class="chal-bar" style="width:${pct}%"></div></div><div class="chal-meta"><span>${c.current||0} / ${c.target} ${c.unit}</span><span>${Math.round(pct)}%</span></div></div>`;
+  }).join('');
+}
+
+function createChallenge(){
+  const title=prompt('Challenge title (e.g. "Run 50km this week"):');
+  if(!title)return;
+  const target=parseFloat(prompt('Target amount (e.g. 50):'));
+  if(isNaN(target))return;
+  const unit=prompt('Unit (km / min / activities):') ||'km';
+  const chals=getChals();
+  chals.push({title,target,current:0,unit,createdAt:Date.now()});
+  saveChals(chals);renderChallenges();
+  postSystemMsg('🎯 New challenge: '+title+'!');
+}
+
+function renderFeed(){
+  const h=JSON.parse(localStorage.getItem('fittrack_activity_history')||'[]').slice().reverse().slice(0,3);
+  const feed=document.getElementById('squadFeed');
+  if(!h.length){feed.innerHTML='<div class="empty-state">Activities shared by squad members will appear here</div>';return;}
+  const ic={run:'🏃',ride:'🚴',walk:'🚶',hike:'⛰️',swim:'🏊',workout:'💪',other:'🎯'};
+  feed.innerHTML=h.map(a=>`
+    <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.12);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px">
+      <div style="font-size:22px">${ic[a.type?.toLowerCase()]||'🎯'}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#fff">${a.title||'Activity'}</div><div style="font-size:11px;color:var(--mt)">${parseFloat(a.distance||0).toFixed(2)} km · ${a.duration||'—'}</div></div>
+      <button class="btn-share-ach" onclick="shareAchievement('${(a.title||'Activity').replace(/'/g,"\\'")}','${parseFloat(a.distance||0).toFixed(2)} km in ${a.duration||'—'}')">Share 📤</button>
+    </div>`).join('');
+}
+
+renderMembers();renderLeaderboard();renderChat();renderChallenges();renderFeed();
+</script></body></html>

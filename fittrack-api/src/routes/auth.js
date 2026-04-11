@@ -94,50 +94,6 @@ router.post("/login", (req, res) => {
   }
 });
 
-// POST /api/auth/google - Google OAuth login
-router.post("/google", (req, res) => {
-  const { email, name } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ error: "Email is required" });
-  }
-
-  try {
-    let user = db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase());
-
-    if (!user) {
-      // Create new user from Google auth
-      const hashedPassword = bcrypt.hashSync(Math.random().toString(36), 10);
-      const result = db
-        .prepare("INSERT INTO users (name, email, password, bio) VALUES (?, ?, ?, ?)")
-        .run(name || "Google User", email.toLowerCase(), hashedPassword, "Joined via Google");
-
-      user = db.prepare("SELECT * FROM users WHERE id = ?").get(result.lastInsertRowid);
-    }
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    return res.json({
-      message: "Google login successful",
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        bio: user.bio,
-        avatar_url: user.avatar_url,
-        created_at: user.created_at,
-      },
-    });
-  } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
-
 // GET /api/auth/me
 router.get("/me", authMiddleware, (req, res) => {
   try {
@@ -244,3 +200,4 @@ router.post("/follow/:id", authMiddleware, (req, res) => {
 });
 
 module.exports = router;
+

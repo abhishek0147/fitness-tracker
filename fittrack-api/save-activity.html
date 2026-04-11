@@ -1,0 +1,94 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FitTrack – Save Activity</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--pri:#F97316;--pri2:#FB923C;--bg:#060914;--s:rgba(255,255,255,0.04);--bd:rgba(249,115,22,0.18);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;color:#e2e8f0;display:flex;flex-direction:column;align-items:center;padding:80px 20px 60px;}
+nav{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(6,9,20,0.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--bd);padding:0 24px;height:56px;display:flex;align-items:center;gap:12px;}
+.nav-t{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--pri),var(--pri2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.card{background:var(--s);border:1px solid var(--bd);border-radius:20px;padding:26px 30px;width:100%;max-width:520px;animation:cardIn 0.6s cubic-bezier(0.22,1,0.36,1) both;}
+@keyframes cardIn{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+.ctitle{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:5px;text-align:center;}
+.csub{font-size:13px;color:rgba(226,232,240,0.38);text-align:center;margin-bottom:22px;}
+#miniMap{width:100%;height:200px;border-radius:13px;overflow:hidden;margin-bottom:20px;border:1px solid var(--bd);}
+.srow{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:20px;}
+.sv{background:rgba(249,115,22,0.07);border:1px solid rgba(249,115,22,0.14);border-radius:11px;padding:11px;text-align:center;}
+.sv-val{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--pri),var(--pri2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sv-lb{font-size:10px;color:rgba(226,232,240,0.38);text-transform:uppercase;letter-spacing:0.8px;margin-top:2px;}
+.fl{margin-bottom:15px;}
+.fl label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:rgba(249,115,22,0.65);margin-bottom:6px;}
+.fl input,.fl select{width:100%;padding:12px 15px;background:rgba(255,255,255,0.04);border:1px solid rgba(249,115,22,0.18);border-radius:11px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;transition:all 0.3s;}
+.fl input:focus,.fl select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(249,115,22,0.1);}
+.fl input::placeholder{color:rgba(255,255,255,0.18);}
+.fl select option{background:#0d1225;}
+.btn-save{width:100%;padding:14px;background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;border-radius:12px;color:#fff;font-family:'Syne',sans-serif;font-size:16px;font-weight:700;transition:all 0.3s;box-shadow:0 4px 18px rgba(249,115,22,0.35);margin-bottom:9px;}
+.btn-save:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(249,115,22,0.5);}
+.btn-save:disabled{opacity:0.5;transform:none;}
+.btn-discard{width:100%;padding:12px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.18);color:#ef4444;border-radius:11px;font-family:'DM Sans',sans-serif;font-size:14px;transition:all 0.3s;}
+.btn-discard:hover{background:rgba(239,68,68,0.14);}
+.msg{margin-top:11px;padding:11px 15px;border-radius:9px;font-size:13px;display:none;}
+.msg.ok{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.22);display:block;}
+.msg.err{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.22);display:block;}
+</style></head><body>
+<div id="pt"></div>
+<nav><div class="nav-t">💾 Save Activity</div></nav>
+<div class="card" id="mainCard">
+  <div class="ctitle">Great work! 💪</div>
+  <div class="csub">Name your activity and save it</div>
+  <div id="miniMap"></div>
+  <div class="srow" id="srow"></div>
+  <div class="fl"><label>Activity Title</label><input type="text" id="titleInput" placeholder="e.g., Morning Run, Evening Walk..." maxlength="60"/></div>
+  <div class="fl"><label>Activity Type</label>
+    <select id="typeSelect">
+      <option value="run">🏃 Run</option><option value="ride">🚴 Ride</option><option value="walk">🚶 Walk</option>
+      <option value="hike">⛰️ Hike</option><option value="swim">🏊 Swim</option><option value="workout">💪 Workout</option><option value="other">🎯 Other</option>
+    </select>
+  </div>
+  <button class="btn-save" id="saveBtn" onclick="saveActivity()">💾 Save Activity</button>
+  <button class="btn-discard" onclick="discardActivity()">🗑 Discard</button>
+  <div class="msg" id="msg"></div>
+</div>
+<script>
+function initT(){const t=document.getElementById('pt');if(!t)return;t.style.cssText='position:fixed;inset:0;z-index:9999;background:#F97316;transform:scaleX(1);transform-origin:right;pointer-events:none;will-change:transform;';requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transition='transform 0.6s cubic-bezier(0.22,1,0.36,1)';t.style.transform='scaleX(0)';}));}
+window.addEventListener('pageshow',e=>{if(e.persisted)initT();});
+function go(url){const t=document.getElementById('pt');if(!t){location.href=url;return;}t.style.cssText='position:fixed;inset:0;z-index:9999;background:#F97316;transform:scaleX(0);transform-origin:left;pointer-events:none;will-change:transform;';requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transition='transform 0.45s cubic-bezier(0.77,0,0.18,1)';t.style.transform='scaleX(1)';setTimeout(()=>location.href=url,460);}));}
+function initCursor(){const s=document.createElement('style');s.textContent='*{cursor:none!important;}';document.head.appendChild(s);const dot=document.createElement('div'),ring=document.createElement('div');dot.style.cssText='position:fixed;width:10px;height:10px;border-radius:50%;background:#F97316;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);top:-20px;left:-20px;';ring.style.cssText='position:fixed;width:34px;height:34px;border-radius:50%;border:2px solid rgba(249,115,22,0.7);pointer-events:none;z-index:99998;transform:translate(-50%,-50%);top:-20px;left:-20px;transition:width 0.2s,height 0.2s,border-color 0.2s,opacity 0.2s;opacity:0.55;';document.body.appendChild(dot);document.body.appendChild(ring);let mx=-20,my=-20,rx=-20,ry=-20;document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';});(function lerp(){rx+=(mx-rx)*0.18;ry+=(my-ry)*0.18;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(lerp);})();document.addEventListener('mousedown',()=>{ring.style.width='22px';ring.style.height='22px';ring.style.opacity='0.9';});document.addEventListener('mouseup',()=>{ring.style.width='34px';ring.style.height='34px';ring.style.opacity='0.55';});document.addEventListener('mouseover',e=>{if(e.target.closest('button,a,[onclick],[role=button]')){ring.style.width='44px';ring.style.height='44px';ring.style.opacity='0.7';ring.style.borderColor='#FB923C';}});document.addEventListener('mouseout',e=>{if(e.target.closest('button,a,[onclick],[role=button]')){ring.style.width='34px';ring.style.height='34px';ring.style.opacity='0.55';ring.style.borderColor='rgba(249,115,22,0.7)';}});}
+initT();initCursor();
+if(!localStorage.getItem('fittrack_token'))location.href='/login.html';
+const pending=JSON.parse(sessionStorage.getItem('pending_activity')||'null');
+if(!pending){document.getElementById('mainCard').innerHTML='<div style="text-align:center;padding:50px 20px;color:rgba(226,232,240,0.4)">No activity data.<br><br><button onclick="go(\'/start-activity.html\')" style="padding:12px 24px;background:linear-gradient(135deg,#F97316,#FB923C);border:none;border-radius:10px;color:#fff;font-family:Syne,sans-serif;font-weight:700;font-size:14px;">Start Activity</button></div>';}
+else{
+  if(pending.type)document.getElementById('typeSelect').value=pending.type;
+  const cal=Math.round(parseFloat(pending.distance)*60);
+  document.getElementById('srow').innerHTML=[
+    [pending.distance+' km','Distance'],[pending.duration,'Duration'],[pending.elevation+' m','Elevation'],[cal+' kcal','Est. Cal']
+  ].map(([v,l])=>`<div class="sv"><div class="sv-val">${v}</div><div class="sv-lb">${l}</div></div>`).join('');
+  setTimeout(()=>{
+    const pts=pending.gpsPoints||[];
+    const mm=L.map('miniMap',{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(mm);
+    if(pts.length>=2){const ll=pts.map(p=>[p.latitude,p.longitude]);L.polyline(ll,{color:'#F97316',weight:4,opacity:0.9}).addTo(mm);L.circleMarker(ll[0],{radius:6,fillColor:'#22c55e',color:'#fff',weight:2,fillOpacity:1}).addTo(mm);L.circleMarker(ll[ll.length-1],{radius:6,fillColor:'#ef4444',color:'#fff',weight:2,fillOpacity:1}).addTo(mm);mm.fitBounds(L.polyline(ll).getBounds(),{padding:[18,18]});}
+    else{mm.setView([20.5937,78.9629],4);}
+    setTimeout(()=>mm.invalidateSize(),100);
+  },200);
+}
+async function saveActivity(){
+  const title=document.getElementById('titleInput').value.trim();
+  if(!title){const m=document.getElementById('msg');m.className='msg err';m.textContent='❌ Please enter a title';return;}
+  const type=document.getElementById('typeSelect').value;
+  const btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='Saving...';
+  const cal=Math.round(parseFloat(pending.distance)*60);
+  const entry={title,type,duration:pending.duration,durationSecs:pending.durationSecs,distance:parseFloat(pending.distance).toFixed(3),elevation:pending.elevation,gpsPoints:pending.gpsPoints||[],points:pending.pointCount||0,calories:cal,savedAt:new Date().toISOString(),finishedAt:new Date().toLocaleString()};
+  const h=JSON.parse(localStorage.getItem('fittrack_activity_history')||'[]');h.push(entry);localStorage.setItem('fittrack_activity_history',JSON.stringify(h));
+  const token=localStorage.getItem('fittrack_token');
+  if(token){try{await fetch(location.origin+'/api/activities',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({title,type,distance:parseFloat(pending.distance),duration:pending.durationSecs||0,elevation_gain:parseFloat(pending.elevation)||0,calories:cal,notes:''})});}catch(e){}}
+  sessionStorage.removeItem('pending_activity');
+  const m=document.getElementById('msg');m.className='msg ok';m.textContent='✅ Activity saved! Redirecting...';
+  setTimeout(()=>go('/dashboard.html'),1100);
+}
+function discardActivity(){if(confirm('Discard this activity?')){sessionStorage.removeItem('pending_activity');go('/dashboard.html');}}
+</script></body></html>

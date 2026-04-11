@@ -1,676 +1,116 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitTrack - Login</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0e27 0%, #16213e 50%, #1a1a2e 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            color: #e0e0e0;
-        }
-
-        .stars-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: white;
-            opacity: 0.5;
-            animation: twinkle 3s infinite;
-        }
-
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
-
-        .container {
-            position: relative;
-            width: 100%;
-            max-width: 900px;
-            margin: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0;
-            background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(25, 35, 60, 0.95) 100%);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 0 60px rgba(102, 255, 200, 0.15), inset 0 0 30px rgba(102, 255, 200, 0.05);
-            border: 2px solid rgba(102, 255, 200, 0.2);
-            animation: slideUp 0.8s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .branding {
-            background: linear-gradient(135deg, rgba(102, 255, 192, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
-            padding: 60px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border-right: 2px solid rgba(102, 255, 200, 0.2);
-            animation: slideInLeft 0.8s ease-out;
-        }
-
-        @keyframes slideInLeft {
-            from {
-                transform: translateX(-50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .logo {
-            font-size: 64px;
-            margin-bottom: 20px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .brand-text {
-            text-align: center;
-        }
-
-        .brand-text h1 {
-            font-size: 36px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #66ffc0 0%, #00ff88 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-            animation: glow 2s ease-in-out infinite;
-        }
-
-        @keyframes glow {
-            0%, 100% {
-                text-shadow: 0 0 10px rgba(102, 255, 192, 0.5);
-            }
-            50% {
-                text-shadow: 0 0 20px rgba(102, 255, 192, 0.8), 0 0 30px rgba(102, 255, 192, 0.5);
-            }
-        }
-
-        .brand-text p {
-            color: #66ffc0;
-            font-size: 14px;
-            opacity: 0.8;
-        }
-
-        .features {
-            margin-top: 40px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .feature {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideInLeft 0.8s ease-out backwards;
-        }
-
-        .feature:nth-child(1) { animation-delay: 0.2s; }
-        .feature:nth-child(2) { animation-delay: 0.4s; }
-        .feature:nth-child(3) { animation-delay: 0.6s; }
-
-        .feature-icon {
-            font-size: 24px;
-        }
-
-        .feature-text {
-            font-size: 14px;
-            color: #b0e0d0;
-        }
-
-        .form-container {
-            padding: 60px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            animation: slideInRight 0.8s ease-out;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .form-container h2 {
-            color: #66ffc0;
-            font-size: 28px;
-            margin-bottom: 30px;
-            text-align: center;
-            animation: glow 2s ease-in-out infinite;
-        }
-
-        .toggle-form {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            background: rgba(102, 255, 192, 0.1);
-            padding: 8px;
-            border-radius: 10px;
-            border: 1px solid rgba(102, 255, 192, 0.2);
-        }
-
-        .toggle-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            background: transparent;
-            color: #66ffc0;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .toggle-btn.active {
-            background: linear-gradient(135deg, #66ffc0 0%, #00ff88 100%);
-            color: #0a0e27;
-            box-shadow: 0 0 15px rgba(102, 255, 192, 0.4);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            animation: slideUp 0.6s ease-out backwards;
-        }
-
-        .form-group:nth-child(n+2) {
-            animation-delay: 0.1s;
-        }
-        .form-group:nth-child(n+3) {
-            animation-delay: 0.2s;
-        }
-        .form-group:nth-child(n+4) {
-            animation-delay: 0.3s;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #66ffc0;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        input[type="tel"] {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid rgba(102, 255, 192, 0.3);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #e0e0e0;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        input::placeholder {
-            color: rgba(102, 255, 192, 0.4);
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #66ffc0;
-            background: rgba(102, 255, 192, 0.1);
-            box-shadow: 0 0 20px rgba(102, 255, 192, 0.4), inset 0 0 10px rgba(102, 255, 192, 0.1);
-        }
-
-        .form-group.hidden {
-            display: none;
-        }
-
-        .btn-login {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #66ffc0 0%, #00ff88 100%);
-            color: #0a0e27;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 20px rgba(102, 255, 192, 0.3);
-            position: relative;
-            overflow: hidden;
-            animation: slideUp 0.6s ease-out 0.4s backwards;
-        }
-
-        .btn-login::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn-login:hover::before {
-            left: 100%;
-        }
-
-        .btn-login:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 30px rgba(102, 255, 192, 0.6), 0 0 40px rgba(102, 255, 192, 0.4);
-        }
-
-        .btn-login:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .google-btn {
-            width: 100%;
-            padding: 14px;
-            background: rgba(102, 255, 192, 0.1);
-            color: #66ffc0;
-            border: 2px solid #66ffc0;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 15px;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 15px rgba(102, 255, 192, 0.2);
-            animation: slideUp 0.6s ease-out 0.5s backwards;
-        }
-
-        .google-btn:hover {
-            background: rgba(102, 255, 192, 0.2);
-            box-shadow: 0 0 25px rgba(102, 255, 192, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .status-message {
-            text-align: center;
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            display: none;
-            animation: slideDown 0.4s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .status-message.success {
-            background: rgba(0, 255, 136, 0.1);
-            color: #00ff88;
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            display: block;
-        }
-
-        .status-message.error {
-            background: rgba(255, 100, 100, 0.1);
-            color: #ff6464;
-            border: 1px solid rgba(255, 100, 100, 0.3);
-            display: block;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 4px;
-            height: 4px;
-            background: #66ffc0;
-            border-radius: 50%;
-            margin-left: 5px;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-
-            .branding {
-                border-right: none;
-                border-bottom: 2px solid rgba(102, 255, 200, 0.2);
-                padding: 40px 30px;
-            }
-
-            .form-container {
-                padding: 40px 30px;
-            }
-
-            .brand-text h1 {
-                font-size: 28px;
-            }
-
-            .features {
-                margin-top: 20px;
-                gap: 15px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="stars-bg" id="starsBg"></div>
-
-    <div class="container">
-        <div class="branding">
-            <div class="logo">🏃</div>
-            <div class="brand-text">
-                <h1>FitTrack</h1>
-                <p>Your personal fitness companion</p>
-            </div>
-            <div class="features">
-                <div class="feature">
-                    <div class="feature-icon">📍</div>
-                    <div class="feature-text">Live GPS Tracking</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">📊</div>
-                    <div class="feature-text">Activity Analytics</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">👥</div>
-                    <div class="feature-text">Social Community</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-container">
-            <h2 id="formTitle">Login</h2>
-
-            <div class="toggle-form">
-                <button class="toggle-btn active" onclick="toggleForm('login')">Login</button>
-                <button class="toggle-btn" onclick="toggleForm('signup')">Sign Up</button>
-            </div>
-
-            <form id="authForm">
-                <!-- Login Form -->
-                <div class="form-group" id="emailGroup">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="your@email.com" required />
-                </div>
-
-                <div class="form-group" id="passwordGroup">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="••••••••" required />
-                </div>
-
-                <!-- Signup Only Fields -->
-                <div class="form-group hidden" id="nameGroup">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" placeholder="John Doe" />
-                </div>
-
-                <div class="form-group hidden" id="phoneGroup">
-                    <label for="phone">Phone (Optional)</label>
-                    <input type="tel" id="phone" placeholder="+1 (555) 000-0000" />
-                </div>
-
-                <button type="submit" class="btn-login" id="submitBtn">Login</button>
-            </form>
-
-            <button class="google-btn" onclick="loginWithGoogle()">
-                🔐 Continue with Google
-            </button>
-
-            <div class="status-message" id="statusMessage"></div>
-        </div>
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FitTrack – Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<style>
+:root{--pri:#F97316;--pri2:#FB923C;--bg:#060914;--border:rgba(249,115,22,0.2);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#e2e8f0;}
+.orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.1;animation:drift 14s ease-in-out infinite;}
+.o1{width:550px;height:550px;background:var(--pri);top:-150px;left:-150px;}
+.o2{width:450px;height:450px;background:#7C3AED;bottom:-150px;right:-150px;animation-delay:-5s;}
+.o3{width:280px;height:280px;background:#38BDF8;top:50%;left:65%;animation-delay:-9s;}
+@keyframes drift{0%,100%{transform:translate(0,0);}33%{transform:translate(30px,-40px);}66%{transform:translate(-20px,30px);}}
+.grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(249,115,22,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,0.035) 1px,transparent 1px);background-size:56px 56px;}
+.wrap{position:relative;z-index:1;width:100%;max-width:920px;margin:20px;display:grid;grid-template-columns:1fr 1fr;border-radius:24px;overflow:hidden;border:1px solid var(--border);box-shadow:0 0 80px rgba(249,115,22,0.1),0 40px 80px rgba(0,0,0,0.55);animation:cardIn 0.85s cubic-bezier(0.22,1,0.36,1) both;}
+@keyframes cardIn{from{opacity:0;transform:translateY(60px) scale(0.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+.left{background:linear-gradient(160deg,rgba(249,115,22,0.09),rgba(251,146,60,0.04));padding:64px 44px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--border);position:relative;overflow:hidden;}
+.left::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 70%,rgba(249,115,22,0.08),transparent 70%);}
+.logo-box{width:72px;height:72px;background:linear-gradient(135deg,var(--pri),var(--pri2));border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:34px;margin-bottom:20px;box-shadow:0 0 40px rgba(249,115,22,0.45);animation:logoFloat 4s ease-in-out infinite;}
+@keyframes logoFloat{0%,100%{transform:translateY(0) rotate(0);}50%{transform:translateY(-10px) rotate(3deg);}}
+.brand{font-family:'Syne',sans-serif;font-size:42px;font-weight:800;background:linear-gradient(135deg,var(--pri),var(--pri2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:6px;}
+.tagline{color:rgba(249,115,22,0.5);font-size:13px;margin-bottom:40px;}
+.feats{display:flex;flex-direction:column;gap:14px;}
+.feat{display:flex;align-items:center;gap:12px;opacity:0;transform:translateX(-18px);animation:featIn 0.6s ease forwards;}
+.feat:nth-child(1){animation-delay:0.4s;}.feat:nth-child(2){animation-delay:0.54s;}.feat:nth-child(3){animation-delay:0.68s;}.feat:nth-child(4){animation-delay:0.82s;}
+@keyframes featIn{to{opacity:1;transform:translateX(0);}}
+.ficon{width:38px;height:38px;border-radius:10px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.flabel{font-size:13px;color:#cbd5e1;}
+.right{background:rgba(6,9,20,0.97);padding:56px 44px;display:flex;flex-direction:column;justify-content:center;}
+.ftitle{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;color:#fff;margin-bottom:5px;opacity:0;animation:fadeUp 0.5s 0.3s ease forwards;}
+.fsub{font-size:13px;color:rgba(255,255,255,0.33);margin-bottom:26px;opacity:0;animation:fadeUp 0.5s 0.4s ease forwards;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,0.05);padding:4px;border-radius:12px;margin-bottom:22px;opacity:0;animation:fadeUp 0.5s 0.5s ease forwards;}
+.tab{flex:1;padding:9px;background:transparent;border:none;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:13px;border-radius:9px;transition:all 0.3s;}
+.tab.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;font-weight:700;box-shadow:0 0 18px rgba(249,115,22,0.35);}
+.field{margin-bottom:14px;opacity:0;animation:fadeUp 0.5s ease forwards;}
+.field:nth-child(1){animation-delay:0.55s;}.field:nth-child(2){animation-delay:0.64s;}.field:nth-child(3){animation-delay:0.73s;}.field:nth-child(4){animation-delay:0.82s;}
+.field.hide{display:none;}
+.field label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:rgba(249,115,22,0.65);margin-bottom:6px;}
+.field input{width:100%;padding:12px 15px;background:rgba(255,255,255,0.04);border:1px solid rgba(249,115,22,0.18);border-radius:11px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;transition:all 0.3s;}
+.field input::placeholder{color:rgba(255,255,255,0.16);}
+.field input:focus{outline:none;border-color:var(--pri);background:rgba(249,115,22,0.06);box-shadow:0 0 0 3px rgba(249,115,22,0.1);}
+.btn-main{width:100%;padding:14px;background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;border-radius:12px;color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-top:6px;transition:all 0.3s;position:relative;overflow:hidden;opacity:0;animation:fadeUp 0.5s 0.88s ease forwards;}
+.btn-main::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:translateX(-100%);transition:transform 0.5s;}
+.btn-main:hover::after{transform:translateX(100%);}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(249,115,22,0.5);}
+.btn-main:disabled{opacity:0.5;transform:none;}
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:rgba(255,255,255,0.16);font-size:11px;opacity:0;animation:fadeUp 0.5s 0.96s ease forwards;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
+.btn-google{width:100%;padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:11px;color:rgba(255,255,255,0.68);font-family:'DM Sans',sans-serif;font-size:13px;transition:all 0.3s;opacity:0;animation:fadeUp 0.5s 1.02s ease forwards;}
+.btn-google:hover{background:rgba(255,255,255,0.08);}
+.status{margin-top:12px;padding:11px 15px;border-radius:10px;font-size:13px;display:none;}
+.status.ok{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.25);display:block;}
+.status.err{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.25);display:block;}
+@media(max-width:680px){.wrap{grid-template-columns:1fr;}.left{padding:36px 28px;border-right:none;border-bottom:1px solid var(--border);}.right{padding:36px 28px;}}
+</style></head><body>
+<div id="pt"></div>
+<div class="orbs"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<div class="grid"></div>
+<div class="wrap">
+  <div class="left">
+    <div class="logo-box">🏃</div>
+    <div class="brand">FitTrack</div>
+    <div class="tagline">Your personal fitness companion</div>
+    <div class="feats">
+      <div class="feat"><div class="ficon">📍</div><div class="flabel">Live GPS Tracking</div></div>
+      <div class="feat"><div class="ficon">📊</div><div class="flabel">Activity Analytics</div></div>
+      <div class="feat"><div class="ficon">⚔️</div><div class="flabel">Squad Competitions</div></div>
+      <div class="feat"><div class="ficon">🏅</div><div class="flabel">Personal Records</div></div>
     </div>
-
-    <script>
-        // Generate stars
-        function generateStars() {
-            const bg = document.getElementById('starsBg');
-            for (let i = 0; i < 150; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.animationDelay = Math.random() * 3 + 's';
-                bg.appendChild(star);
-            }
-        }
-        generateStars();
-
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBTYbG7LkZOHOLsRiQTKvJvpn0arqJ6fsY",
-            authDomain: "fitness-tracking-d01f6.firebaseapp.com",
-            projectId: "fitness-tracking-d01f6",
-            storageBucket: "fitness-tracking-d01f6.firebasestorage.app",
-            messagingSenderId: "300448448622",
-            appId: "1:300448448622:web:2ba258bed6d86ad145a67f"
-        };
-
-        // Initialize Firebase
-        let auth, db;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            db = firebase.database();
-        } catch (error) {
-            console.log('Firebase not fully configured yet. Using local mode.');
-        }
-
-        let isLoginMode = true;
-
-        function toggleForm(mode) {
-            isLoginMode = mode === 'login';
-            const buttons = document.querySelectorAll('.toggle-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            const nameGroup = document.getElementById('nameGroup');
-            const phoneGroup = document.getElementById('phoneGroup');
-            const formTitle = document.getElementById('formTitle');
-            const submitBtn = document.getElementById('submitBtn');
-
-            if (isLoginMode) {
-                nameGroup.classList.add('hidden');
-                phoneGroup.classList.add('hidden');
-                formTitle.textContent = 'Login';
-                submitBtn.textContent = 'Login';
-            } else {
-                nameGroup.classList.remove('hidden');
-                phoneGroup.classList.remove('hidden');
-                formTitle.textContent = 'Create Account';
-                submitBtn.textContent = 'Sign Up';
-            }
-
-            document.getElementById('statusMessage').classList.remove('success', 'error');
-            document.getElementById('statusMessage').style.display = 'none';
-        }
-
-        async function handleAuth(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const statusMsg = document.getElementById('statusMessage');
-            const submitBtn = document.getElementById('submitBtn');
-
-            statusMsg.style.display = 'none';
-            submitBtn.disabled = true;
-            submitBtn.textContent += ' <span class="loading"></span>';
-
-            try {
-                let response;
-                if (isLoginMode) {
-                    // Login via FitTrack API
-                    response = await fetch('http://localhost:3000/api/auth/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
-                    });
-                } else {
-                    // Signup via FitTrack API
-                    const name = document.getElementById('name').value;
-                    response = await fetch('http://localhost:3000/api/auth/register', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, email, password })
-                    });
-                }
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Authentication failed');
-                }
-
-                // Save token
-                localStorage.setItem('fittrack_token', data.token);
-                localStorage.setItem('fittrack_user', JSON.stringify({
-                    id: data.user.id,
-                    name: data.user.name,
-                    email: data.user.email
-                }));
-
-                statusMsg.className = 'status-message success';
-                statusMsg.textContent = isLoginMode ? '✅ Login successful! Redirecting...' : '✅ Account created! Redirecting...';
-                statusMsg.style.display = 'block';
-
-                setTimeout(() => {
-                    window.location.href = 'http://localhost:3000/live-tracker-neon.html';
-                }, 2000);
-            } catch (error) {
-                statusMsg.className = 'status-message error';
-                statusMsg.textContent = '❌ ' + error.message;
-                statusMsg.style.display = 'block';
-                submitBtn.disabled = false;
-                submitBtn.textContent = isLoginMode ? 'Login' : 'Sign Up';
-            }
-        }
-
-        async function loginWithGoogle() {
-            try {
-                if (!auth) {
-                    throw new Error('Firebase not configured. Please add your Firebase credentials.');
-                }
-
-                const provider = new firebase.auth.GoogleAuthProvider();
-                const result = await auth.signInWithPopup(provider);
-                const user = result.user;
-
-                // Get ID token and exchange for FitTrack token
-                const idToken = await user.getIdToken();
-
-                const response = await fetch('http://localhost:3000/api/auth/google', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        idToken,
-                        email: user.email,
-                        name: user.displayName
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Google authentication failed');
-                }
-
-                localStorage.setItem('fittrack_token', data.token);
-                localStorage.setItem('fittrack_user', JSON.stringify({
-                    id: data.user.id,
-                    name: data.user.name,
-                    email: data.user.email
-                }));
-
-                const statusMsg = document.getElementById('statusMessage');
-                statusMsg.className = 'status-message success';
-                statusMsg.textContent = '✅ Google login successful! Redirecting...';
-                statusMsg.style.display = 'block';
-
-                setTimeout(() => {
-                    window.location.href = 'http://localhost:3000/live-tracker-neon.html';
-                }, 2000);
-            } catch (error) {
-                const statusMsg = document.getElementById('statusMessage');
-                statusMsg.className = 'status-message error';
-                statusMsg.textContent = '❌ ' + error.message;
-                statusMsg.style.display = 'block';
-            }
-        }
-
-        document.getElementById('authForm').addEventListener('submit', handleAuth);
-    </script>
-</body>
-</html>
+  </div>
+  <div class="right">
+    <div class="ftitle" id="ftitle">Welcome back</div>
+    <div class="fsub" id="fsub">Sign in to continue your fitness journey</div>
+    <div class="tabs">
+      <button class="tab on" onclick="switchTab('login',this)">Login</button>
+      <button class="tab" onclick="switchTab('signup',this)">Sign Up</button>
+    </div>
+    <form id="authForm">
+      <div class="field hide" id="nameF"><label>Full Name</label><input type="text" id="name" placeholder="John Doe"/></div>
+      <div class="field"><label>Email</label><input type="email" id="email" placeholder="your@email.com" required/></div>
+      <div class="field"><label>Password</label><input type="password" id="password" placeholder="••••••••" required/></div>
+      <button type="submit" class="btn-main" id="sbtn">Sign In</button>
+    </form>
+    <div class="divider">or</div>
+    <button class="btn-google" onclick="loginWithGoogle()">🔐 Continue with Google</button>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+<script>
+function initT(){const t=document.getElementById('pt');if(!t)return;t.style.cssText='position:fixed;inset:0;z-index:9999;background:#F97316;transform:scaleX(1);transform-origin:right;pointer-events:none;will-change:transform;';requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transition='transform 0.6s cubic-bezier(0.22,1,0.36,1)';t.style.transform='scaleX(0)';}));}
+window.addEventListener('pageshow',e=>{if(e.persisted)initT();});
+function go(url){const t=document.getElementById('pt');if(!t){location.href=url;return;}t.style.cssText='position:fixed;inset:0;z-index:9999;background:#F97316;transform:scaleX(0);transform-origin:left;pointer-events:none;will-change:transform;';requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transition='transform 0.45s cubic-bezier(0.77,0,0.18,1)';t.style.transform='scaleX(1)';setTimeout(()=>location.href=url,460);}));}
+function initCursor(){const s=document.createElement('style');s.textContent='*{cursor:none!important;}';document.head.appendChild(s);const dot=document.createElement('div'),ring=document.createElement('div');dot.style.cssText='position:fixed;width:10px;height:10px;border-radius:50%;background:#F97316;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);top:-20px;left:-20px;';ring.style.cssText='position:fixed;width:34px;height:34px;border-radius:50%;border:2px solid rgba(249,115,22,0.7);pointer-events:none;z-index:99998;transform:translate(-50%,-50%);top:-20px;left:-20px;transition:width 0.2s,height 0.2s,border-color 0.2s,opacity 0.2s;opacity:0.55;';document.body.appendChild(dot);document.body.appendChild(ring);let mx=-20,my=-20,rx=-20,ry=-20;document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';});(function lerp(){rx+=(mx-rx)*0.18;ry+=(my-ry)*0.18;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(lerp);})();document.addEventListener('mousedown',()=>{ring.style.width='22px';ring.style.height='22px';ring.style.opacity='0.9';});document.addEventListener('mouseup',()=>{ring.style.width='34px';ring.style.height='34px';ring.style.opacity='0.55';});document.addEventListener('mouseover',e=>{if(e.target.closest('button,a,[onclick],[role=button]')){ring.style.width='44px';ring.style.height='44px';ring.style.opacity='0.7';ring.style.borderColor='#FB923C';}});document.addEventListener('mouseout',e=>{if(e.target.closest('button,a,[onclick],[role=button]')){ring.style.width='34px';ring.style.height='34px';ring.style.opacity='0.55';ring.style.borderColor='rgba(249,115,22,0.7)';}});}
+initT();initCursor();
+const apiBase=location.origin;let isLogin=true,auth;
+try{firebase.initializeApp({apiKey:"AIzaSyBTYbG7LkZOHOLsRiQTKvJvpn0arqJ6fsY",authDomain:"fitness-tracking-d01f6.firebaseapp.com",projectId:"fitness-tracking-d01f6",storageBucket:"fitness-tracking-d01f6.firebasestorage.app",messagingSenderId:"300448448622",appId:"1:300448448622:web:2ba258bed6d86ad145a67f"});auth=firebase.auth();}catch(e){}
+if(localStorage.getItem('fittrack_token'))go('/dashboard.html');
+function switchTab(mode,btn){isLogin=mode==='login';document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));btn.classList.add('on');document.getElementById('nameF').classList.toggle('hide',isLogin);document.getElementById('ftitle').textContent=isLogin?'Welcome back':'Create account';document.getElementById('fsub').textContent=isLogin?'Sign in to continue your fitness journey':'Start tracking your fitness today';document.getElementById('sbtn').textContent=isLogin?'Sign In':'Create Account';document.getElementById('status').className='status';}
+document.getElementById('authForm').addEventListener('submit',async e=>{
+  e.preventDefault();const email=document.getElementById('email').value,password=document.getElementById('password').value;
+  const s=document.getElementById('status'),btn=document.getElementById('sbtn'),orig=btn.textContent;
+  s.className='status';btn.disabled=true;btn.textContent=isLogin?'Signing in...':'Creating account...';
+  try{const body=isLogin?{email,password}:{email,password,name:document.getElementById('name').value};
+    const res=await fetch(apiBase+(isLogin?'/api/auth/login':'/api/auth/register'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await res.json();if(!res.ok)throw new Error(data.error||'Authentication failed');
+    localStorage.setItem('fittrack_token',data.token);
+    localStorage.setItem('fittrack_user',JSON.stringify({id:data.user.id,name:data.user.name,email:data.user.email}));
+    s.className='status ok';s.textContent='✅ Success! Loading dashboard...';setTimeout(()=>go('/dashboard.html'),900);
+  }catch(err){s.className='status err';s.textContent='❌ '+err.message;btn.disabled=false;btn.textContent=orig;}
+});
+async function loginWithGoogle(){try{if(!auth)throw new Error('Firebase not configured.');const r=await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());const it=await r.user.getIdToken();const res=await fetch(apiBase+'/api/auth/google',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken:it,email:r.user.email,name:r.user.displayName})});const data=await res.json();if(!res.ok)throw new Error(data.error||'Google auth failed');localStorage.setItem('fittrack_token',data.token);localStorage.setItem('fittrack_user',JSON.stringify({id:data.user.id,name:data.user.name,email:data.user.email}));go('/dashboard.html');}catch(err){const s=document.getElementById('status');s.className='status err';s.textContent='❌ '+err.message;}}
+</script></body></html>
