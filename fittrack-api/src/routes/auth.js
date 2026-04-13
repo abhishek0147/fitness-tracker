@@ -1,3 +1,4 @@
+// FITTRACK-AUTH-V2 (check this comment is present after pasting)
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -28,7 +29,8 @@ router.post("/register", async (req, res) => {
     ).run(name, email.toLowerCase(), hashed, bio || "");
     const token = makeToken({ id: result.lastInsertRowid, email: email.toLowerCase() });
     return res.status(201).json({
-      message: "Account created successfully", token,
+      message: "Account created successfully",
+      token,
       user: { id: result.lastInsertRowid, name, email: email.toLowerCase(), bio: bio || "" },
     });
   } catch (err) {
@@ -48,7 +50,8 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password" });
     const token = makeToken({ id: user.id, email: user.email });
     return res.json({
-      message: "Login successful", token,
+      message: "Login successful",
+      token,
       user: { id: user.id, name: user.name, email: user.email, bio: user.bio, avatar_url: user.avatar_url, created_at: user.created_at },
     });
   } catch (err) {
@@ -57,14 +60,13 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// POST /api/auth/google  ← THIS WAS MISSING
+// POST /api/auth/google
 router.post("/google", async (req, res) => {
-  const { email, name, idToken } = req.body;
+  const { email, name } = req.body;
   if (!email || !name) return res.status(400).json({ error: "Email and name are required" });
   try {
     let user = await db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase());
     if (!user) {
-      // Auto-create account for Google users (no password needed)
       const result = await db.prepare(
         "INSERT INTO users (name, email, password, bio) VALUES (?, ?, ?, ?)"
       ).run(name, email.toLowerCase(), "", "");
@@ -72,7 +74,8 @@ router.post("/google", async (req, res) => {
     }
     const token = makeToken({ id: user.id, email: user.email });
     return res.json({
-      message: "Google login successful", token,
+      message: "Google login successful",
+      token,
       user: { id: user.id, name: user.name, email: user.email, bio: user.bio, avatar_url: user.avatar_url },
     });
   } catch (err) {
@@ -90,9 +93,9 @@ router.get("/me", authMiddleware, async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found" });
     const stats = await db.prepare(`
       SELECT COUNT(*) as total_activities,
-        COALESCE(SUM(distance),0) as total_distance,
-        COALESCE(SUM(duration),0) as total_duration,
-        COALESCE(SUM(calories),0) as total_calories
+        COALESCE(SUM(distance), 0) as total_distance,
+        COALESCE(SUM(duration), 0) as total_duration,
+        COALESCE(SUM(calories), 0) as total_calories
       FROM activities WHERE user_id = ?
     `).get(req.user.id);
     return res.json({ ...user, stats });
@@ -110,8 +113,8 @@ router.get("/users/:id", authMiddleware, async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found" });
     const stats = await db.prepare(`
       SELECT COUNT(*) as total_activities,
-        COALESCE(SUM(distance),0) as total_distance,
-        COALESCE(SUM(duration),0) as total_duration
+        COALESCE(SUM(distance), 0) as total_distance,
+        COALESCE(SUM(duration), 0) as total_duration
       FROM activities WHERE user_id = ?
     `).get(req.params.id);
     const followers = await db.prepare("SELECT COUNT(*) as count FROM follows WHERE following_id = ?").get(req.params.id);
@@ -126,11 +129,14 @@ router.get("/users/:id", authMiddleware, async (req, res) => {
 // POST /api/auth/follow/:id
 router.post("/follow/:id", authMiddleware, async (req, res) => {
   const followingId = parseInt(req.params.id);
-  if (followingId === req.user.id) return res.status(400).json({ error: "You cannot follow yourself" });
+  if (followingId === req.user.id)
+    return res.status(400).json({ error: "You cannot follow yourself" });
   try {
     const target = await db.prepare("SELECT id FROM users WHERE id = ?").get(followingId);
     if (!target) return res.status(404).json({ error: "User not found" });
-    const existing = await db.prepare("SELECT id FROM follows WHERE follower_id = ? AND following_id = ?").get(req.user.id, followingId);
+    const existing = await db.prepare(
+      "SELECT id FROM follows WHERE follower_id = ? AND following_id = ?"
+    ).get(req.user.id, followingId);
     if (existing) {
       await db.prepare("DELETE FROM follows WHERE follower_id = ? AND following_id = ?").run(req.user.id, followingId);
       return res.json({ message: "Unfollowed successfully", following: false });
