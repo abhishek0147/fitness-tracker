@@ -493,9 +493,9 @@ async function requestWakeLock(){
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&st.tracking) requestWakeLock();
 });
- <script>
+ 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
-</script> 
+
 </script></body></html>
