@@ -3,75 +3,41 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 
-const authRoutes = require("./routes/auth");
-const activitiesRoutes = require("./routes/activities");
-const statsRoutes = require("./routes/stats");
-const feedRoutes = require("./routes/feed");
-const routesRoutes = require("./routes/routes");
-const { initializeFirebase } = require("./services/firebaseService");
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize Firebase
-initializeFirebase();
-
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "..")));
 
-// Request logger
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  next();
-});
+try { const { initializeFirebase } = require("./services/firebaseService"); initializeFirebase(); } catch (e) { console.warn("Firebase skipped:", e.message); }
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/activities", activitiesRoutes);
-app.use("/api/stats", statsRoutes);
-app.use("/api/feed", feedRoutes);
-app.use("/api/routes", routesRoutes);
+const routes = { "/api/auth": "./routes/auth", "/api/activities": "./routes/activities", "/api/stats": "./routes/stats", "/api/feed": "./routes/feed", "/api/routes": "./routes/routes" };
+for (const [prefix, file] of Object.entries(routes)) {
+  try { app.use(prefix, require(file)); }
+  catch (e) { console.error(`Route ${prefix} failed:`, e.message); app.use(prefix, (req, res) => res.status(503).json({ error: "Service unavailable" })); }
+}
 
-// Serve all HTML pages
-const HTML_PAGES = ["login","dashboard","start-activity","save-activity","activity-history","squad","live-tracker-neon","map-viewer"];
-HTML_PAGES.forEach(p => {
+// PWA files
+app.get("/manifest.json", (req, res) => res.sendFile(path.join(__dirname, "../manifest.json")));
+app.get("/sw.js", (req, res) => { res.setHeader("Service-Worker-Allowed", "/"); res.sendFile(path.join(__dirname, "../sw.js")); });
+
+// HTML pages
+["login","dashboard","start-activity","save-activity","activity-history","squad","live-tracker-neon","map-viewer"].forEach(p => {
   app.get([`/${p}`, `/${p}.html`], (req, res) => {
-    const f = path.join(__dirname, `../${p}.html`);
-    res.sendFile(f, err => { if (err) res.redirect('/'); });
+    res.sendFile(path.join(__dirname, `../${p}.html`), err => { if (err) res.redirect("/login.html"); });
   });
 });
 
-// Home page - redirect or show dashboard
-app.get("/", (req, res) => {
-  res.redirect('/login.html');
-});
-
-// 404 handler
+app.get("/", (req, res) => res.redirect("/login.html"));
 app.use((req, res) => {
-  res.status(404).json({ error: `Route ${req.method} ${req.path} not found` });
+  if (req.headers.accept?.includes("text/html")) return res.redirect("/login.html");
+  res.status(404).json({ error: "Not found" });
 });
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Something went wrong" });
-});
+app.use((err, req, res, next) => { console.error(err.stack); res.status(500).json({ error: "Server error" }); });
 
 const isVercel = process.env.VERCEL === "1" || !!process.env.VERCEL_ENV;
-
-if (!isVercel) {
-  app.listen(PORT, () => {
-    console.log(`
-  ╔═══════════════════════════════════════╗
-  ║         FitTrack API 🏃‍♂️              ║
-  ║   Server running on port ${PORT}         ║
-  ║   Visit: http://localhost:${PORT}        ║
-  ╚═══════════════════════════════════════╝
-  `);
-  });
-}
+if (!isVercel) app.listen(PORT, () => console.log(`🏃 FitTrack → http://localhost:${PORT}`));
 
 module.exports = app;
