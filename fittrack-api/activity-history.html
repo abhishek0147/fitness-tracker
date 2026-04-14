@@ -152,9 +152,9 @@ function doNativeShare(){
 }
 function doCopyStats(){const b=event.target;navigator.clipboard.writeText(buildShareText()).then(()=>{b.textContent='✅ Copied!';setTimeout(()=>b.textContent='📋 Copy Stats',2000);});}
 render();
-<script>
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
-</script>
+
 </script></body></html>
