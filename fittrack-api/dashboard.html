@@ -236,9 +236,9 @@ function saveField(field){
 }
 function copyCode(){navigator.clipboard.writeText(document.getElementById('pCode').textContent);const b=event.target;b.textContent='✅ Copied!';setTimeout(()=>b.textContent='📋 Copy',2000);}
 loadStats();loadRecent();setTimeout(renderGraph,80);window.addEventListener('resize',()=>setTimeout(renderGraph,80));
-<script>
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
-</script>
+
 </script></body></html>
