@@ -1,4 +1,4 @@
-const CACHE = "fittrack-v2";
+const CACHE = "fittrack-v3";
 const PAGES = [
   "/login.html", "/dashboard.html", "/start-activity.html",
   "/save-activity.html", "/activity-history.html", "/squad.html"
@@ -23,7 +23,7 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
 
-  // API — network only, return offline error if no connection
+  // API calls — always go to network, never cache
   if (url.pathname.startsWith("/api/")) {
     e.respondWith(
       fetch(e.request).catch(() =>
@@ -35,13 +35,17 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // HTML pages — network first, cache fallback
+  // HTML pages — network first so we always get fresh JS/HTML
+  // Do NOT cache login.html so form submissions always work fresh
   if (e.request.mode === "navigate") {
     e.respondWith(
       fetch(e.request)
         .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+          // Only cache non-login pages
+          if (!url.pathname.includes("login")) {
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put(e.request, clone));
+          }
           return res;
         })
         .catch(() => caches.match(e.request) || caches.match("/login.html"))
@@ -49,7 +53,7 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // Everything else — cache first, network fallback
+  // Static assets — cache first
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
