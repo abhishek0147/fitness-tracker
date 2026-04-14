@@ -97,9 +97,9 @@ async function saveActivity(){
   setTimeout(()=>go('/dashboard.html'),1100);
 }
 function discardActivity(){if(confirm('Discard this activity?')){sessionStorage.removeItem('pending_activity');go('/dashboard.html');}}
-<script>
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
-</script>
+
 </script></body></html>
