@@ -1,4 +1,10 @@
 <!DOCTYPE html><html lang="en"><head>
+  <link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FitTrack">
+<meta name="theme-color" content="#F97316">
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FitTrack – Start Activity</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -487,4 +493,9 @@ async function requestWakeLock(){
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&st.tracking) requestWakeLock();
 });
+ <script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script> 
 </script></body></html>
