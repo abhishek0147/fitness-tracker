@@ -1,1002 +1,248 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="manifest" href="/manifest.json">
+<!DOCTYPE html><html lang="en"><head>
+<link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FitTrack">
 <meta name="theme-color" content="#F97316">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitTrack - Live GPS Tracking</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0e27 0%, #16213e 50%, #1a1a2e 100%);
-            min-height: 100vh;
-            color: #e0e0e0;
-            overflow: auto;
-        }
-
-        .stars-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: white;
-            opacity: 0.5;
-            animation: twinkle 3s infinite;
-        }
-
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
-
-
-        @keyframes slideIn {
-            from { transform: translateX(-100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        .map-container {
-            position: relative;
-            background: linear-gradient(135deg, #1a1a3a 0%, #16213e 100%);
-            border-radius: 24px;
-            overflow: visible;
-            height: 70vh;
-            min-height: 400px;
-            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35);
-        }
-
-        #map { width: 100%; height: 100%; border-radius: 24px; }
-
-        .container {
-            display: grid;
-            grid-template-columns: 360px minmax(0, 1fr);
-            gap: 24px;
-            min-height: 100vh;
-            padding: 24px;
-            align-items: stretch;
-        }
-
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(102, 255, 192, 0.15);
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-            max-height: calc(100vh - 48px);
-            overflow-y: auto;
-        }
-
-        @media (max-width: 900px) {
-            .container {
-                grid-template-columns: 1fr;
-                padding: 16px;
-            }
-
-            .map-container {
-                min-height: 50vh;
-            }
-        }
-
-        h1 {
-            background: linear-gradient(135deg, #66ffc0 0%, #00ff88 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 30px;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            animation: glow 2s ease-in-out infinite;
-        }
-
-        @keyframes glow {
-            0%, 100% { text-shadow: 0 0 10px rgba(102, 255, 192, 0.5); }
-            50% { text-shadow: 0 0 20px rgba(102, 255, 192, 0.8), 0 0 30px rgba(102, 255, 192, 0.5); }
-        }
-
-        .form-group { margin-bottom: 18px; }
-
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #66ffc0;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid rgba(102, 255, 192, 0.3);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #e0e0e0;
-            transition: all 0.3s ease;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #66ffc0;
-            background: rgba(102, 255, 192, 0.1);
-            box-shadow: 0 0 20px rgba(102, 255, 192, 0.4), inset 0 0 10px rgba(102, 255, 192, 0.1);
-        }
-
-        .button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin: 25px 0 15px;
-        }
-
-        button {
-            padding: 12px 16px;
-            border: 2px solid;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #66ffc0 0%, #00ff88 100%);
-            color: #0a0e27;
-            border-color: #66ffc0;
-            grid-column: 1 / -1;
-            box-shadow: 0 0 20px rgba(102, 255, 192, 0.3);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 30px rgba(102, 255, 192, 0.6), 0 0 40px rgba(102, 255, 192, 0.4);
-        }
-
-        .btn-primary:disabled {
-            background: rgba(102, 102, 102, 0.3);
-            border-color: rgba(102, 102, 102, 0.3);
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background: rgba(102, 255, 192, 0.1);
-            color: #66ffc0;
-            border-color: #66ffc0;
-            box-shadow: 0 0 15px rgba(102, 255, 192, 0.2);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: rgba(102, 255, 192, 0.2);
-            box-shadow: 0 0 25px rgba(102, 255, 192, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #ff006e 0%, #ff4081 100%);
-            color: white;
-            border-color: #ff006e;
-            grid-column: 1 / -1;
-            box-shadow: 0 0 20px rgba(255, 0, 110, 0.3);
-        }
-
-        .btn-success:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 30px rgba(255, 0, 110, 0.6), 0 0 40px rgba(255, 0, 110, 0.4);
-        }
-
-        .btn-danger {
-            background: rgba(255, 100, 100, 0.1);
-            color: #ff6464;
-            border-color: #ff6464;
-            box-shadow: 0 0 15px rgba(255, 100, 100, 0.2);
-        }
-
-        .btn-danger:hover:not(:disabled) {
-            background: rgba(255, 100, 100, 0.2);
-            box-shadow: 0 0 25px rgba(255, 100, 100, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .stats-box {
-            background: linear-gradient(135deg, rgba(102, 255, 200, 0.1) 0%, rgba(255, 0, 110, 0.05) 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 2px solid rgba(102, 255, 192, 0.2);
-            box-shadow: 0 0 30px rgba(102, 255, 192, 0.15);
-        }
-
-        .history-box {
-            background: linear-gradient(135deg, rgba(102, 255, 200, 0.08) 0%, rgba(10, 20, 50, 0.95) 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 2px solid rgba(102, 255, 192, 0.16);
-            box-shadow: 0 0 25px rgba(0, 0, 0, 0.18);
-        }
-
-        .history-clear {
-            font-size: 12px;
-            padding: 8px 12px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.08);
-            color: #e0f4de;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            cursor: pointer;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .history-header h3 {
-            margin-bottom: 0 !important;
-        }
-
-        .history-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-
-        .history-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .history-share {
-            padding: 8px 10px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            background: rgba(255, 255, 255, 0.08);
-            color: #d4f9ff;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .history-share:hover {
-            background: rgba(255, 255, 255, 0.14);
-        }
-
-        .history-delete {
-            padding: 8px 10px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            background: rgba(255, 255, 255, 0.08);
-            color: #ffdede;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .history-delete:hover {
-            background: rgba(255, 255, 255, 0.14);
-        }
-
-        .history-box {
-            background: linear-gradient(135deg, rgba(102, 255, 200, 0.08) 0%, rgba(10, 20, 50, 0.9) 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 2px solid rgba(102, 255, 192, 0.16);
-            box-shadow: 0 0 25px rgba(0, 0, 0, 0.18);
-        }
-
-        .history-box h3 {
-            margin-bottom: 15px;
-            font-size: 16px;
-            color: #66ffc0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .history-item {
-            padding: 14px;
-            margin-bottom: 12px;
-            border-radius: 14px;
-            background: rgba(10, 20, 40, 0.8);
-            border: 1px solid rgba(102, 255, 192, 0.12);
-        }
-
-        .history-item strong {
-            display: block;
-            color: #e3fef4;
-            margin-bottom: 8px;
-        }
-
-        .history-meta {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-            color: #bfe8d4;
-            font-size: 13px;
-        }
-
-        .history-item span,
-        .history-time {
-            display: block;
-            color: #b0d8c4;
-            font-size: 13px;
-        }
-
-        .history-empty {
-            color: #9bd4b8;
-            font-size: 14px;
-        }
-
-        .stats-box h3 {
-            margin-bottom: 15px;
-            font-size: 16px;
-            color: #66ffc0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(102, 255, 192, 0.1);
-            font-size: 14px;
-            color: #66ffc0;
-        }
-
-        .stat-row:last-child { border-bottom: none; }
-
-        .stat-value {
-            font-weight: 700;
-            font-size: 16px;
-            background: linear-gradient(135deg, #66ffc0 0%, #00ff88 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .status {
-            background: rgba(102, 255, 192, 0.1);
-            padding: 12px 15px;
-            border-left: 4px solid #66ffc0;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            color: #66ffc0;
-            box-shadow: 0 0 15px rgba(102, 255, 192, 0.2);
-        }
-
-        .status.tracking {
-            border-left-color: #00ff88;
-            background: rgba(0, 255, 136, 0.1);
-            color: #00ff88;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
-        }
-
-        .status.error {
-            border-left-color: #ff6464;
-            background: rgba(255, 100, 100, 0.1);
-            color: #ff6464;
-        }
-
-        .status.success {
-            border-left-color: #00ff88;
-            background: rgba(0, 255, 136, 0.1);
-            color: #00ff88;
-        }
-
-        .tracking-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            background: #00ff88;
-            border-radius: 50%;
-            margin-right: 8px;
-            animation: pulse 1.5s infinite;
-            box-shadow: 0 0 10px #00ff88;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: rgba(102, 255, 192, 0.1);
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(102, 255, 192, 0.3);
-            border-radius: 3px;
-        }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap" rel="stylesheet">
-    <style>
-        .pt{position:fixed;inset:0;z-index:9999;background:#66ffc0;transform:scaleX(0);transform-origin:right;}
-        .pt.in{animation:ptIn 0.5s cubic-bezier(0.22,1,0.36,1) forwards;}
-        .pt.out{transform-origin:left;transform:scaleX(1);transition:transform 0.5s cubic-bezier(0.77,0,0.18,1);}
-        @keyframes ptIn{from{transform:scaleX(1);}to{transform:scaleX(0);}}
-        .top-nav{position:sticky;top:0;z-index:50;background:rgba(8,12,30,0.9);backdrop-filter:blur(16px);
-            border-bottom:1px solid rgba(102,255,192,0.12);
-            padding:0 24px;height:56px;display:flex;align-items:center;gap:16px;
-            animation:navSlide 0.5s ease both;}
-        @keyframes navSlide{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
-        .back-btn{display:flex;align-items:center;gap:8px;background:rgba(102,255,192,0.08);
-            border:1px solid rgba(102,255,192,0.2);color:#66ffc0;border-radius:10px;
-            padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.3s;text-decoration:none;}
-        .back-btn:hover{background:rgba(102,255,192,0.15);border-color:rgba(102,255,192,0.4);}
-        .nav-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
-            background:linear-gradient(135deg,#66ffc0,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-        .map-tooltip {
-            background: #0a0e27 !important;
-            color: #66ffc0 !important;
-            border: 1px solid #66ffc0 !important;
-            font-weight: 700;
-            font-size: 12px;
-        }
-        .map-tooltip::before { border-top-color: #66ffc0 !important; }
-    </style>
-</head>
-<body>
-    <div class="pt in" id="pt"></div>
-    <div class="top-nav">
-        <a class="back-btn" onclick="goBack()">← Dashboard</a>
-        <div class="nav-title">🏃 FitTrack Live</div>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FitTrack - Live GPS Tracking</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0a0e27,#16213e,#1a1a2e);min-height:100vh;color:#e0e0e0;overflow:auto;}
+.top-nav{position:sticky;top:0;z-index:50;background:rgba(8,12,30,0.9);backdrop-filter:blur(16px);border-bottom:1px solid rgba(102,255,192,0.12);padding:0 24px;height:56px;display:flex;align-items:center;gap:16px;}
+.back-btn{display:flex;align-items:center;gap:8px;background:rgba(102,255,192,0.08);border:1px solid rgba(102,255,192,0.2);color:#66ffc0;border-radius:10px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.3s;-webkit-tap-highlight-color:transparent;}
+.back-btn:hover{background:rgba(102,255,192,0.15);}
+.nav-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;background:linear-gradient(135deg,#66ffc0,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.container{display:grid;grid-template-columns:360px minmax(0,1fr);gap:24px;min-height:calc(100vh - 56px);padding:24px;}
+.sidebar{display:flex;flex-direction:column;gap:20px;background:rgba(255,255,255,0.04);border:1px solid rgba(102,255,192,0.15);border-radius:24px;padding:30px;max-height:calc(100vh - 104px);overflow-y:auto;}
+.map-container{border-radius:24px;overflow:hidden;height:calc(100vh - 104px);min-height:400px;}
+#map{width:100%;height:100%;}
+h1{background:linear-gradient(135deg,#66ffc0,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:24px;font-weight:700;letter-spacing:1px;margin-bottom:20px;}
+.form-group{margin-bottom:16px;}
+label{display:block;font-weight:600;margin-bottom:8px;color:#66ffc0;font-size:13px;text-transform:uppercase;letter-spacing:1px;}
+input,select{width:100%;padding:12px 15px;border:2px solid rgba(102,255,192,0.3);border-radius:8px;background:rgba(255,255,255,0.05);color:#e0e0e0;font-size:14px;font-family:inherit;}
+input:focus,select:focus{outline:none;border-color:#66ffc0;box-shadow:0 0 20px rgba(102,255,192,0.4);}
+.button-group{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0 12px;}
+button{padding:12px 16px;border:2px solid;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.3s;text-transform:uppercase;letter-spacing:0.5px;-webkit-tap-highlight-color:transparent;}
+.btn-primary{background:linear-gradient(135deg,#66ffc0,#00ff88);color:#0a0e27;border-color:#66ffc0;grid-column:1/-1;box-shadow:0 0 20px rgba(102,255,192,0.3);}
+.btn-primary:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 5px 30px rgba(102,255,192,0.6);}
+.btn-primary:disabled{background:rgba(102,102,102,0.3);border-color:rgba(102,102,102,0.3);cursor:not-allowed;}
+.btn-secondary{background:rgba(102,255,192,0.1);color:#66ffc0;border-color:#66ffc0;}
+.btn-secondary:hover:not(:disabled){background:rgba(102,255,192,0.2);transform:translateY(-2px);}
+.btn-secondary:disabled{opacity:0.3;cursor:not-allowed;}
+.btn-danger{background:rgba(255,100,100,0.1);color:#ff6464;border-color:#ff6464;}
+.btn-danger:hover:not(:disabled){background:rgba(255,100,100,0.2);transform:translateY(-2px);}
+.stats-box{background:linear-gradient(135deg,rgba(102,255,200,0.1),rgba(255,0,110,0.05));padding:20px;border-radius:12px;margin-bottom:16px;border:2px solid rgba(102,255,192,0.2);}
+.stats-box h3,.history-box h3{margin-bottom:12px;font-size:14px;color:#66ffc0;text-transform:uppercase;letter-spacing:1px;}
+.stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(102,255,192,0.1);font-size:13px;color:#66ffc0;}
+.stat-row:last-child{border-bottom:none;}
+.stat-value{font-weight:700;font-size:15px;background:linear-gradient(135deg,#66ffc0,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.status{background:rgba(102,255,192,0.1);padding:12px 15px;border-left:4px solid #66ffc0;border-radius:6px;margin-bottom:16px;font-size:13px;color:#66ffc0;}
+.status.tracking{border-left-color:#00ff88;background:rgba(0,255,136,0.1);color:#00ff88;}
+.status.error{border-left-color:#ff6464;background:rgba(255,100,100,0.1);color:#ff6464;}
+.tracking-indicator{display:inline-block;width:12px;height:12px;background:#00ff88;border-radius:50%;margin-right:8px;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(1.2);}}
+.history-box{background:rgba(102,255,200,0.05);padding:16px;border-radius:12px;border:1px solid rgba(102,255,192,0.12);}
+.history-item{padding:12px;margin-bottom:10px;border-radius:12px;background:rgba(10,20,40,0.8);border:1px solid rgba(102,255,192,0.12);}
+.history-item strong{display:block;color:#e3fef4;margin-bottom:6px;font-size:13px;}
+.history-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;color:#bfe8d4;font-size:12px;}
+.history-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.history-actions{display:flex;gap:6px;}
+.history-share,.history-delete{padding:5px 9px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.06);color:#d4f9ff;cursor:pointer;font-size:11px;-webkit-tap-highlight-color:transparent;}
+.history-empty{color:#9bd4b8;font-size:13px;}
+.history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.history-clear{font-size:12px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.06);color:#e0f4de;border:1px solid rgba(255,255,255,0.12);cursor:pointer;}
+@media(max-width:900px){.container{grid-template-columns:1fr;padding:16px;}.map-container{min-height:50vh;height:50vh;}}
+</style>
+</head><body>
+<div class="top-nav">
+  <button class="back-btn" onclick="goBack()">← Dashboard</button>
+  <div class="nav-title">🏃 FitTrack Live</div>
+</div>
+<div class="container">
+  <div class="sidebar">
+    <h1>🏃 FitTrack Live</h1>
+    <div id="statusDiv" class="status"><span class="tracking-indicator"></span>Ready to start. Click Begin Tracking!</div>
+    <div class="form-group">
+      <label for="activityTitle">Activity Title</label>
+      <input type="text" id="activityTitle" placeholder="e.g., Morning Run"/>
     </div>
-    <div class="stars-bg" id="starsBg"></div>
-    <div class="container">
-        <div class="sidebar">
-            <h1>🏃 FitTrack Live</h1>
-            <div id="status" class="status">
-                <span class="tracking-indicator"></span>
-                Ready to start. Click Begin Tracking!
-            </div>
-            <form id="activityForm">
-                <div class="form-group">
-                    <label for="activityTitle">Activity Title</label>
-                    <input type="text" id="activityTitle" placeholder="e.g., Morning Run" required />
-                </div>
-                <div class="form-group">
-                    <label for="activityType">Activity Type</label>
-                    <select id="activityType" required>
-                        <option value="">Select Activity Type</option>
-                        <option value="run">🏃 Run</option>
-                        <option value="cycle">🚴 Cycle</option>
-                        <option value="walk">🚶 Walk</option>
-                        <option value="hike">⛰️ Hike</option>
-                        <option value="swim">🏊 Swim</option>
-                        <option value="workout">💪 Workout</option>
-                        <option value="other">🎯 Other</option>
-                    </select>
-                </div>
-                <div class="button-group">
-                    <button type="button" id="startBtn" class="btn-primary">Begin Tracking</button>
-                    <button type="button" id="pauseBtn" class="btn-secondary" disabled>Pause</button>
-                    <button type="button" id="stopBtn" class="btn-danger" disabled>Stop</button>
-                </div>
-                    <div id="history" class="history-box">
-                        <div class="history-header">
-                            <h3>📚 Activity History</h3>
-                            <button type="button" id="clearHistoryBtn" class="btn-secondary history-clear">Clear All</button>
-                        </div>
-                        <div id="historyList" class="history-list">
-                            <p class="history-empty">No finished activities yet.</p>
-                        </div>
-                    </div>
-            </form>
-            <div id="stats" class="stats-box" style="display: none;">
-                <h3>📊 Live Stats</h3>
-                <div class="stat-row">
-                    <span>Distance:</span>
-                    <span class="stat-value" id="distance">0.00 km</span>
-                </div>
-                <div class="stat-row">
-                    <span>Duration:</span>
-                    <span class="stat-value" id="duration">00:00:00</span>
-                </div>
-                <div class="stat-row">
-                    <span>Points:</span>
-                    <span class="stat-value" id="pointCount">0</span>
-                </div>
-                <div class="stat-row">
-                    <span>Speed:</span>
-                    <span class="stat-value" id="speed">0.0 km/h</span>
-                </div>
-                <div class="stat-row">
-                    <span>Elevation:</span>
-                    <span class="stat-value" id="elevation">0 m</span>
-                </div>
-            </div>
-        </div>
-        <div class="map-container">
-            <div id="map"></div>
-        </div>
+    <div class="form-group">
+      <label for="activityType">Activity Type</label>
+      <select id="activityType">
+        <option value="">Select Activity Type</option>
+        <option value="run">🏃 Run</option><option value="cycle">🚴 Cycle</option>
+        <option value="walk">🚶 Walk</option><option value="hike">⛰️ Hike</option>
+        <option value="swim">🏊 Swim</option><option value="workout">💪 Workout</option>
+        <option value="other">🎯 Other</option>
+      </select>
     </div>
-    <!-- Share Modal -->
-    <div id="shareModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center;">
-        <div style="background:linear-gradient(135deg,#0f1629 0%,#16213e 100%); border:2px solid rgba(102,255,192,0.3); border-radius:20px; width:min(600px,95vw); max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 0 60px rgba(102,255,192,0.2);">
-            <div style="padding:20px 24px; border-bottom:1px solid rgba(102,255,192,0.15); display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <div id="shareTitle" style="font-size:18px; font-weight:700; color:#66ffc0;"></div>
-                    <div id="shareMeta" style="font-size:12px; color:#9bd4b8; margin-top:4px;"></div>
-                </div>
-                <button onclick="closeShareModal()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#e0e0e0; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:14px;">✕ Close</button>
-            </div>
-            <div id="shareMapContainer" style="width:100%; height:350px; position:relative;"></div>
-            <div style="padding:16px 24px; display:flex; gap:10px; flex-wrap:wrap; border-top:1px solid rgba(102,255,192,0.15);">
-                <button onclick="downloadRouteMap()" style="flex:1; padding:12px; background:linear-gradient(135deg,#66ffc0,#00ff88); color:#0a0e27; border:none; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px; text-transform:uppercase; letter-spacing:1px;">⬇ Download Map</button>
-                <button onclick="copyShareText()" style="flex:1; padding:12px; background:rgba(102,255,192,0.1); color:#66ffc0; border:2px solid #66ffc0; border-radius:10px; font-weight:600; cursor:pointer; font-size:13px; text-transform:uppercase; letter-spacing:1px;">📋 Copy Stats</button>
-            </div>
-        </div>
+    <div class="button-group">
+      <button class="btn-primary" id="startBtn" onclick="startTracking()">Begin Tracking</button>
+      <button class="btn-secondary" id="pauseBtn" onclick="togglePause()" disabled>Pause</button>
+      <button class="btn-danger" id="stopBtn" onclick="stopTracking()" disabled>Stop</button>
     </div>
-
-    <script>
-        function goBack() {
-            const t = document.getElementById('pt');
-            t.className = 'pt out';
-            setTimeout(() => window.location.href = '/dashboard.html', 520);
-        }
-
-        function generateStars() {
-            const bg = document.getElementById('starsBg');
-            for (let i = 0; i < 100; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.animationDelay = Math.random() * 3 + 's';
-                bg.appendChild(star);
-            }
-        }
-        generateStars();
-
-        const state = {
-            tracking: false,
-            paused: false,
-            gpsPoints: [],
-            startTime: null,
-            pausedTime: 0,
-            lastLocation: null,
-            watchId: null,
-            polyline: null,
-            currentMarker: null,
-            totalDistance: 0,
-            totalElevation: 0,
-            history: [],
-            deletedActivity: null,
-            undoTimeout: null,
-            map: null,
-        };
-
-        state.map = L.map('map').setView([40.7128, -74.0060], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(state.map);
-        setTimeout(() => state.map.invalidateSize(), 200);
-
-        const currentIcon = L.icon({
-            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iOCIgZmlsbD0iIzY2ZmZjMCIgc3Ryb2tlPSIjMGEwZTI3IiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI0IiBmaWxsPSIjMGEwZTI3Ii8+PC9zdmc+',
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
-        });
-
-        const startBtn = document.getElementById('startBtn');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const titleInput = document.getElementById('activityTitle');
-        const typeSelect = document.getElementById('activityType');
-        const statusDiv = document.getElementById('status');
-        const statsBox = document.getElementById('stats');
-        const historyList = document.getElementById('historyList');
-        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-
-        function updateStatus(message, type = 'info') {
-            statusDiv.className = `status ${type}`;
-            const indicator = '<span class="tracking-indicator"></span>';
-            statusDiv.innerHTML = indicator + message;
-        }
-
-        function formatTime(seconds) {
-            const h = Math.floor(seconds / 3600);
-            const m = Math.floor((seconds % 3600) / 60);
-            const s = Math.floor(seconds % 60);
-            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        }
-
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = ((lat2 - lat1) * Math.PI) / 180;
-            const dLon = ((lon2 - lon1) * Math.PI) / 180;
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
-
-        function updateStats() {
-            const elapsed = Math.floor((Date.now() - state.startTime + state.pausedTime) / 1000);
-            document.getElementById('duration').textContent = formatTime(elapsed);
-            document.getElementById('distance').textContent = state.totalDistance.toFixed(2) + ' km';
-            document.getElementById('pointCount').textContent = state.gpsPoints.length;
-            document.getElementById('elevation').textContent = state.totalElevation.toFixed(0) + ' m';
-            if (elapsed > 0) document.getElementById('speed').textContent = (state.totalDistance / (elapsed / 3600)).toFixed(1) + ' km/h';
-        }
-
-        startBtn.addEventListener('click', () => {
-            if (!navigator.geolocation) { updateStatus('❌ Geolocation not supported', 'error'); return; }
-            if (!titleInput.value || !typeSelect.value) { updateStatus('❌ Fill all fields', 'error'); return; }
-
-            state.tracking = true;
-            state.paused = false;
-            state.startTime = Date.now();
-            state.gpsPoints = [];
-            state.totalDistance = 0;
-            state.totalElevation = 0;
-
-            startBtn.disabled = true;
-            pauseBtn.disabled = false;
-            stopBtn.disabled = false;
-            titleInput.disabled = true;
-            typeSelect.disabled = true;
-            statsBox.style.display = 'block';
-
-            updateStatus('🟢 GPS tracking active...', 'tracking');
-
-            state.watchId = navigator.geolocation.watchPosition(
-                onLocationSuccess,
-                onLocationError,
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-            );
-
-            state.statsInterval = setInterval(updateStats, 1000);
-        });
-
-        pauseBtn.addEventListener('click', () => {
-            state.paused = !state.paused;
-            if (state.paused) {
-                navigator.geolocation.clearWatch(state.watchId);
-                pauseBtn.textContent = '▶ Resume';
-                updateStatus('⏸️ Paused', 'info');
-                state.pauseStartTime = Date.now();
-            } else {
-                state.pausedTime += Date.now() - state.pauseStartTime;
-                pauseBtn.textContent = '⏸ Pause';
-                updateStatus('🟢 Tracking resumed', 'tracking');
-                state.watchId = navigator.geolocation.watchPosition(
-                    onLocationSuccess,
-                    onLocationError,
-                    { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-                );
-            }
-        });
-
-        stopBtn.addEventListener('click', () => {
-            state.tracking = false;
-            navigator.geolocation.clearWatch(state.watchId);
-            clearInterval(state.statsInterval);
-
-            startBtn.disabled = false;
-            pauseBtn.disabled = true;
-            pauseBtn.textContent = '⏸ Pause';
-            stopBtn.disabled = true;
-            titleInput.disabled = false;
-            typeSelect.disabled = false;
-            addActivityToHistory();
-
-            updateStatus('⏹️ Ready to save', 'success');
-        });
-
-        function onLocationSuccess(position) {
-            const { latitude, longitude, altitude } = position.coords;
-            const point = { latitude, longitude, elevation: altitude || 0, timestamp: new Date().toISOString() };
-
-            if (state.lastLocation) {
-                const dist = calculateDistance(state.lastLocation.latitude, state.lastLocation.longitude, latitude, longitude);
-                state.totalDistance += dist;
-                if (altitude && state.lastLocation.elevation) {
-                    const elevChange = altitude - state.lastLocation.elevation;
-                    if (elevChange > 0) state.totalElevation += elevChange;
-                }
-            }
-
-            state.gpsPoints.push(point);
-            state.lastLocation = point;
-
-            const latlng = [latitude, longitude];
-            if (state.polyline) state.map.removeLayer(state.polyline);
-            const route = state.gpsPoints.map(p => [p.latitude, p.longitude]);
-            state.polyline = L.polyline(route, { color: '#66ffc0', weight: 4, opacity: 0.9 }).addTo(state.map);
-
-            if (state.currentMarker) {
-                state.currentMarker.setLatLng(latlng);
-            } else {
-                state.currentMarker = L.marker(latlng, { icon: currentIcon }).addTo(state.map);
-            }
-
-            if (state.gpsPoints.length > 0) state.map.fitBounds(state.polyline.getBounds(), { padding: [50, 50] });
-        }
-
-        function onLocationError(error) {
-            const messages = { 1: 'Permission denied', 2: 'Position unavailable', 3: 'Timeout' };
-            updateStatus('⚠️ ' + (messages[error.code] || 'GPS error'), 'error');
-        }
-
-        function loadHistory() {
-            const stored = localStorage.getItem('fittrack_activity_history');
-            if (stored) {
-                try {
-                    state.history = JSON.parse(stored);
-                } catch (err) {
-                    state.history = [];
-                }
-            }
-            renderHistory();
-        }
-
-        function saveHistory() {
-            localStorage.setItem('fittrack_activity_history', JSON.stringify(state.history));
-        }
-
-        function queueUndo(action, data) {
-            clearTimeout(state.undoTimeout);
-            state.deletedActivity = { action, data };
-            statusDiv.style.cursor = 'pointer';
-            updateStatus('↩️ Activity deleted. Click here to undo.', 'error');
-            state.undoTimeout = setTimeout(() => {
-                state.deletedActivity = null;
-                statusDiv.style.cursor = 'default';
-            }, 10000);
-        }
-
-        function undoDelete() {
-            if (!state.deletedActivity) return;
-            const { action, data } = state.deletedActivity;
-            if (action === 'remove') {
-                state.history.splice(data.index, 0, data.entry);
-            } else if (action === 'clear') {
-                state.history = data.previous.slice();
-            }
-            saveHistory();
-            renderHistory();
-            state.deletedActivity = null;
-            statusDiv.style.cursor = 'default';
-            updateStatus('✅ Undo successful', 'success');
-            clearTimeout(state.undoTimeout);
-        }
-
-        let shareMap = null;
-        let currentShareEntry = null;
-
-        function shareActivity(entry) {
-            currentShareEntry = entry;
-            const modal = document.getElementById('shareModal');
-            modal.style.display = 'flex';
-
-            document.getElementById('shareTitle').textContent = `🏃 ${entry.title} (${entry.type})`;
-            document.getElementById('shareMeta').textContent = `${entry.duration} · ${entry.distance} km · ${entry.elevation} m elev · ${entry.finishedAt}`;
-
-            // Destroy old map instance if exists
-            const container = document.getElementById('shareMapContainer');
-            container.innerHTML = '';
-            const mapDiv = document.createElement('div');
-            mapDiv.id = 'shareMap';
-            mapDiv.style.width = '100%';
-            mapDiv.style.height = '100%';
-            container.appendChild(mapDiv);
-
-            setTimeout(() => {
-                shareMap = L.map('shareMap', { zoomControl: true, attributionControl: false });
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(shareMap);
-
-                const points = entry.gpsPoints;
-                if (points && points.length >= 2) {
-                    const latlngs = points.map(p => [p.latitude, p.longitude]);
-
-                    // Draw route line
-                    L.polyline(latlngs, { color: '#66ffc0', weight: 5, opacity: 0.95 }).addTo(shareMap);
-
-                    // Start marker
-                    L.circleMarker(latlngs[0], {
-                        radius: 9, fillColor: '#00ff88', color: '#0a0e27',
-                        weight: 3, fillOpacity: 1
-                    }).bindTooltip('Start', { permanent: true, direction: 'top', className: 'map-tooltip' }).addTo(shareMap);
-
-                    // End marker
-                    L.circleMarker(latlngs[latlngs.length - 1], {
-                        radius: 9, fillColor: '#ff006e', color: '#0a0e27',
-                        weight: 3, fillOpacity: 1
-                    }).bindTooltip('Finish', { permanent: true, direction: 'top', className: 'map-tooltip' }).addTo(shareMap);
-
-                    shareMap.fitBounds(L.polyline(latlngs).getBounds(), { padding: [40, 40] });
-                } else {
-                    shareMap.setView([40.7128, -74.0060], 13);
-                    const center = document.createElement('div');
-                    center.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#66ffc0;font-size:14px;text-align:center;z-index:1000;background:rgba(10,14,39,0.8);padding:12px 20px;border-radius:10px;';
-                    center.textContent = '⚠️ No GPS route data saved for this activity';
-                    container.appendChild(center);
-                }
-
-                shareMap.invalidateSize();
-            }, 100);
-        }
-
-        function closeShareModal() {
-            document.getElementById('shareModal').style.display = 'none';
-            if (shareMap) { shareMap.remove(); shareMap = null; }
-        }
-
-        function copyShareText() {
-            if (!currentShareEntry) return;
-            const e = currentShareEntry;
-            const text = `🏃 FitTrack Activity\n${e.title} (${e.type})\n⏱ ${e.duration}  📍 ${e.distance} km  ⛰ ${e.elevation} m\nFinished: ${e.finishedAt}`;
-            navigator.clipboard.writeText(text);
-            updateStatus('✅ Stats copied to clipboard!', 'success');
-        }
-
-        function downloadRouteMap() {
-            if (!shareMap) return;
-            html2canvas(document.getElementById('shareMapContainer'), { useCORS: true, scale: 2 }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `fittrack-route-${Date.now()}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            }).catch(() => {
-                updateStatus('⚠️ Download not supported in this browser. Screenshot manually.', 'info');
-            });
-        }
-
-        // Close modal on backdrop click
-        document.getElementById('shareModal').addEventListener('click', function(e) {
-            if (e.target === this) closeShareModal();
-        });
-
-        function renderHistory() {
-            historyList.innerHTML = '';
-            if (!state.history.length) {
-                historyList.innerHTML = '<p class="history-empty">No finished activities yet.</p>';
-                return;
-            }
-            state.history.slice().reverse().forEach((entry, index) => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
-                item.innerHTML = `
-                    <div class="history-top">
-                        <strong>${entry.title}</strong>
-                        <div class="history-actions">
-                            <button type="button" class="history-share" data-index="${index}">Share</button>
-                            <button type="button" class="history-delete" data-index="${index}">Delete</button>
-                        </div>
-                    </div>
-                    <span class="history-type">${entry.type}</span>
-                    <div class="history-meta">
-                        <span>${entry.duration}</span>
-                        <span>${entry.distance} km</span>
-                        <span>${entry.elevation} m</span>
-                        <span>${entry.points} points</span>
-                    </div>
-                    <div class="history-time">${entry.finishedAt}</div>
-                `;
-                const realIndex = state.history.length - 1 - index;
-                item.querySelector('.history-delete').addEventListener('click', () => {
-                    const removedEntry = state.history.splice(realIndex, 1)[0];
-                    saveHistory();
-                    renderHistory();
-                    queueUndo('remove', { entry: removedEntry, index: realIndex });
-                });
-                item.querySelector('.history-share').addEventListener('click', () => {
-                    shareActivity(entry);
-                });
-                historyList.appendChild(item);
-            });
-        }
-
-        function clearHistory() {
-            if (!state.history.length) return;
-            if (confirm('Clear all saved activities from history?')) {
-                const previous = state.history.slice();
-                state.history = [];
-                saveHistory();
-                renderHistory();
-                queueUndo('clear', { previous });
-            }
-        }
-
-        function addActivityToHistory() {
-            if (state.gpsPoints.length < 2) {
-                updateStatus('❌ Need 2+ GPS points to finish', 'error');
-                return;
-            }
-            const finishedAt = new Date().toLocaleString();
-            const entry = {
-                title: titleInput.value || 'Untitled Activity',
-                type: typeSelect.options[typeSelect.selectedIndex].text,
-                duration: formatTime(Math.floor((Date.now() - state.startTime + state.pausedTime) / 1000)),
-                distance: state.totalDistance.toFixed(2),
-                elevation: state.totalElevation.toFixed(0),
-                points: state.gpsPoints.length,
-                finishedAt,
-                gpsPoints: state.gpsPoints.slice(),
-            };
-            state.history.push(entry);
-            saveHistory();
-            renderHistory();
-            updateStatus('✅ Activity saved to history', 'success');
-            setTimeout(() => {
-                titleInput.value = '';
-                typeSelect.value = '';
-                state.gpsPoints = [];
-                state.totalDistance = 0;
-                state.totalElevation = 0;
-                statsBox.style.display = 'none';
-                if (state.polyline) state.map.removeLayer(state.polyline);
-                if (state.currentMarker) state.map.removeLayer(state.currentMarker);
-                updateStatus('✅ Ready for next activity', 'success');
-            }, 1000);
-        }
-
-        loadHistory();
-
-        clearHistoryBtn.addEventListener('click', clearHistory);
-        statusDiv.addEventListener('click', undoDelete);
-
-        document.getElementById('activityForm').addEventListener('submit', e => e.preventDefault());
-
-        window.addEventListener('load', () => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    () => updateStatus('✅ GPS ready!', 'success'),
-                    () => updateStatus('⚠️ Enable GPS in browser', 'info')
-                );
-            }
-            setTimeout(() => state.map.invalidateSize(), 100);
-        });
+    <div id="statsBox" class="stats-box" style="display:none">
+      <h3>📊 Live Stats</h3>
+      <div class="stat-row"><span>Distance:</span><span class="stat-value" id="statDist">0.00 km</span></div>
+      <div class="stat-row"><span>Duration:</span><span class="stat-value" id="statDur">00:00:00</span></div>
+      <div class="stat-row"><span>Speed:</span><span class="stat-value" id="statSpeed">0.0 km/h</span></div>
+      <div class="stat-row"><span>Points:</span><span class="stat-value" id="statPts">0</span></div>
+      <div class="stat-row"><span>Elevation:</span><span class="stat-value" id="statElev">0 m</span></div>
+    </div>
+    <div class="history-box">
+      <div class="history-header">
+        <h3>📚 History</h3>
+        <button class="history-clear" onclick="clearHistory()">Clear All</button>
+      </div>
+      <div id="historyList"><p class="history-empty">No activities yet.</p></div>
+    </div>
+  </div>
+  <div class="map-container"><div id="map"></div></div>
+</div>
 <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+function goBack(){location.href='/dashboard.html';}
+
+const st={tracking:false,paused:false,pts:[],startTime:null,pausedMs:0,pauseStart:null,watchId:null,watchIdLow:null,lastHighAccTime:0,interval:null,polyline:null,marker:null,dist:0,elev:0,lastLoc:null};
+let history=[];
+try{history=JSON.parse(localStorage.getItem('fittrack_activity_history')||'[]');}catch(e){}
+
+const map=L.map('map').setView([20.5937,78.9629],5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+setTimeout(()=>map.invalidateSize(),200);
+
+const curIcon=L.divIcon({html:'<div style="width:18px;height:18px;border-radius:50%;background:#66ffc0;border:3px solid #0a0e27;box-shadow:0 0 12px #66ffc0;"></div>',iconSize:[18,18],iconAnchor:[9,9],className:''});
+
+function setStatus(msg,type=''){const d=document.getElementById('statusDiv');d.className='status'+(type?' '+type:'');d.innerHTML='<span class="tracking-indicator"></span>'+msg;}
+function fmt(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.floor(s%60);return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
+function calcDist(a,b,c,d){const R=6371,dL=((c-a)*Math.PI)/180,dl=((d-b)*Math.PI)/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dl/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+
+function updateStats(){
+  const el=Math.floor((Date.now()-st.startTime+st.pausedMs)/1000);
+  document.getElementById('statDist').textContent=st.dist.toFixed(2)+' km';
+  document.getElementById('statDur').textContent=fmt(el);
+  document.getElementById('statSpeed').textContent=el>0?(st.dist/(el/3600)).toFixed(1)+' km/h':'0.0 km/h';
+  document.getElementById('statPts').textContent=st.pts.length;
+  document.getElementById('statElev').textContent=st.elev.toFixed(0)+' m';
 }
+
+function onLoc(pos,isHigh){
+  const{latitude:lat,longitude:lon,altitude:alt,accuracy}=pos.coords;
+  if(!isHigh&&Date.now()-st.lastHighAccTime<8000)return;
+  if(isHigh)st.lastHighAccTime=Date.now();
+  if(!st.tracking||st.paused)return;
+  const pt={latitude:lat,longitude:lon,elevation:alt||0,timestamp:new Date().toISOString(),accuracy};
+  if(st.lastLoc&&accuracy<500){
+    const d=calcDist(st.lastLoc.latitude,st.lastLoc.longitude,lat,lon);
+    if(d>0.002){st.dist+=d;if(alt&&st.lastLoc.elevation){const dz=alt-st.lastLoc.elevation;if(dz>0)st.elev+=dz;}}
+  }
+  st.pts.push(pt);st.lastLoc=pt;
+  if(st.polyline)map.removeLayer(st.polyline);
+  st.polyline=L.polyline(st.pts.map(p=>[p.latitude,p.longitude]),{color:'#66ffc0',weight:4,opacity:0.9}).addTo(map);
+  if(st.marker)st.marker.setLatLng([lat,lon]);else st.marker=L.marker([lat,lon],{icon:curIcon}).addTo(map);
+  if(st.pts.length>1)map.fitBounds(st.polyline.getBounds(),{padding:[40,40]});else map.setView([lat,lon],16);
+}
+
+function startWatchers(){
+  st.watchId=navigator.geolocation.watchPosition(p=>onLoc(p,true),e=>setStatus('⚠️ GPS error: '+e.message,'error'),{enableHighAccuracy:true,maximumAge:0,timeout:15000});
+  st.watchIdLow=navigator.geolocation.watchPosition(p=>onLoc(p,false),()=>{},{enableHighAccuracy:false,maximumAge:5000,timeout:30000});
+}
+function stopWatchers(){
+  if(st.watchId!==null){navigator.geolocation.clearWatch(st.watchId);st.watchId=null;}
+  if(st.watchIdLow!==null){navigator.geolocation.clearWatch(st.watchIdLow);st.watchIdLow=null;}
+}
+
+function startTracking(){
+  if(!navigator.geolocation){setStatus('❌ Geolocation not supported','error');return;}
+  const title=document.getElementById('activityTitle').value.trim();
+  const type=document.getElementById('activityType').value;
+  if(!title||!type){setStatus('❌ Please fill in title and type','error');return;}
+  Object.assign(st,{tracking:true,paused:false,pts:[],dist:0,elev:0,lastLoc:null,startTime:Date.now(),pausedMs:0,lastHighAccTime:0});
+  document.getElementById('startBtn').disabled=true;
+  document.getElementById('pauseBtn').disabled=false;
+  document.getElementById('stopBtn').disabled=false;
+  document.getElementById('activityTitle').disabled=true;
+  document.getElementById('activityType').disabled=true;
+  document.getElementById('statsBox').style.display='block';
+  setStatus('🟢 GPS + Cell tower tracking active','tracking');
+  startWatchers();
+  st.interval=setInterval(updateStats,1000);
+}
+
+function togglePause(){
+  const btn=document.getElementById('pauseBtn');
+  if(!st.paused){
+    stopWatchers();st.paused=true;st.pauseStart=Date.now();
+    btn.textContent='Resume';setStatus('⏸ Paused');
+  } else {
+    st.pausedMs+=Date.now()-st.pauseStart;st.paused=false;
+    btn.textContent='Pause';setStatus('🟢 Tracking resumed','tracking');
+    startWatchers();
+  }
+}
+
+function stopTracking(){
+  stopWatchers();clearInterval(st.interval);st.tracking=false;
+  if(st.pts.length<2){setStatus('❌ Need 2+ GPS points','error');resetUI();return;}
+  const elapsed=Math.floor((Date.now()-st.startTime+st.pausedMs)/1000);
+  const title=document.getElementById('activityTitle').value||'Activity';
+  const type=document.getElementById('activityType').options[document.getElementById('activityType').selectedIndex].text;
+  const entry={title,type,duration:fmt(elapsed),durationSecs:elapsed,distance:st.dist.toFixed(2),elevation:st.elev.toFixed(0),calories:Math.round(st.dist*60),gpsPoints:st.pts.slice(),savedAt:new Date().toISOString(),finishedAt:new Date().toLocaleString()};
+  history.push(entry);
+  localStorage.setItem('fittrack_activity_history',JSON.stringify(history));
+  setStatus('✅ Activity saved!','tracking');
+  renderHistory();resetUI();
+}
+
+function resetUI(){
+  document.getElementById('startBtn').disabled=false;
+  document.getElementById('pauseBtn').disabled=true;
+  document.getElementById('pauseBtn').textContent='Pause';
+  document.getElementById('stopBtn').disabled=false;
+  document.getElementById('activityTitle').disabled=false;
+  document.getElementById('activityTitle').value='';
+  document.getElementById('activityType').disabled=false;
+  document.getElementById('activityType').value='';
+  document.getElementById('statsBox').style.display='none';
+}
+
+function renderHistory(){
+  const list=document.getElementById('historyList');
+  if(!history.length){list.innerHTML='<p class="history-empty">No activities yet.</p>';return;}
+  list.innerHTML=history.slice().reverse().map((a,i)=>`
+    <div class="history-item">
+      <div class="history-top">
+        <strong>${a.title}</strong>
+        <div class="history-actions">
+          <button class="history-delete" onclick="deleteHistory(${history.length-1-i})">🗑 Delete</button>
+        </div>
+      </div>
+      <div class="history-meta">
+        <span>⏱ ${a.duration}</span><span>📍 ${a.distance} km</span>
+        <span>⛰ ${a.elevation} m</span><span>🔥 ${a.calories||'—'} kcal</span>
+      </div>
+      <div style="font-size:11px;color:#9bd4b8;margin-top:4px">${a.finishedAt||''}</div>
+    </div>`).join('');
+}
+
+function deleteHistory(idx){
+  if(!confirm('Delete this activity?'))return;
+  history.splice(idx,1);
+  localStorage.setItem('fittrack_activity_history',JSON.stringify(history));
+  renderHistory();
+}
+
+function clearHistory(){
+  if(!history.length||!confirm('Clear all activities?'))return;
+  history=[];localStorage.setItem('fittrack_activity_history','[]');renderHistory();
+}
+
+renderHistory();
+
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}
 </script>
-    </script>
-</body>
-</html>
+</body></html>
