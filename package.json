@@ -1,5 +1,25 @@
 {
+  "name": "fittrack-api",
+  "version": "1.0.0",
+  "description": "A Strava-like fitness tracking REST API",
+  "engines": { "node": "20.x" },
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "build": "echo 'Build complete'",
+    "vercel-build": "echo 'Build complete'"
+  },
   "dependencies": {
-    "vercel": "^50.41.0"
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^9.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "firebase-admin": "^12.7.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }
